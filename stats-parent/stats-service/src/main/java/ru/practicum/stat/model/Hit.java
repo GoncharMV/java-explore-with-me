@@ -1,4 +1,4 @@
-package model;
+package ru.practicum.stat.model;
 
 import lombok.*;
 
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Hits {
+public class Hit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

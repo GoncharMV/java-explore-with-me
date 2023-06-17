@@ -6,7 +6,7 @@ import ru.practicum.dto.StatsOutputDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface StatsService {
+public interface StatisticService {
 
     void saveHit(HitsInputDto requestBody);
 

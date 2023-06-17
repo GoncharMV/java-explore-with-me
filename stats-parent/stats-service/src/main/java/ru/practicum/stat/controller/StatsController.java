@@ -7,7 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.HitsInputDto;
 import ru.practicum.dto.StatsOutputDto;
-import ru.practicum.stat.service.StatsService;
+import ru.practicum.stat.service.StatisticService;
 
 
 import javax.validation.Valid;
@@ -19,12 +19,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StatsController {
 
-    private final StatsService statsService;
+    private final StatisticService statisticService;
 
     @PostMapping("/hit")
     public void saveHit(@RequestBody @Valid HitsInputDto requestBody) {
         log.info("Информация сохранена");
-        statsService.saveHit(requestBody);
+        statisticService.saveHit(requestBody);
     }
 
     @GetMapping("/stats")
@@ -34,7 +34,7 @@ public class StatsController {
             @RequestParam(required = false) List<String> uris,
             @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("Статистика собрана");
-        return statsService.viewStats(start, end, uris, unique);
+        return statisticService.viewStats(start, end, uris, unique);
     }
 
 }
