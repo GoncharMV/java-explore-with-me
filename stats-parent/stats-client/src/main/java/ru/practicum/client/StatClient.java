@@ -7,6 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import ru.practicum.dto.HitsInputDto;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class StatClient extends BaseClient {
@@ -21,8 +26,22 @@ public class StatClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> saveEndpointHit() {
-        return null;
+    public ResponseEntity<Object> saveHit(HitsInputDto requestBody) {
+        return post("/hit", requestBody);
+    }
+
+    public ResponseEntity<Object> viewStats(LocalDateTime start,
+                                                  LocalDateTime end,
+                                                  List<String> uris,
+                                                  Boolean unique) {
+
+        Map<String, Object> parameters = Map.of(
+                "start", start,
+                "end", end,
+                "uris", uris,
+                "unique", unique
+        );
+        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }
 
 }

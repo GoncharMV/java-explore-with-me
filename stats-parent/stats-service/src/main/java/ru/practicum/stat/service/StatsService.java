@@ -10,6 +10,6 @@ public interface StatsService {
 
     void saveHit(HitsInputDto requestBody);
 
-    List<StatsOutputDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
+    List<StatsOutputDto> viewStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
 
 }

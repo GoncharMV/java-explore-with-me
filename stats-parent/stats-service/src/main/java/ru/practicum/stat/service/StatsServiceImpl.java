@@ -29,7 +29,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
-    public List<StatsOutputDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    public List<StatsOutputDto> viewStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         return null;
     }
 }

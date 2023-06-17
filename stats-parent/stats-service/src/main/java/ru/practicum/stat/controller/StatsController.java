@@ -28,13 +28,13 @@ public class StatsController {
     }
 
     @GetMapping("/stats")
-    public List<StatsOutputDto> getStats(
+    public List<StatsOutputDto> viewStats(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
             @RequestParam(required = false) List<String> uris,
             @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("Статистика собрана");
-        return statsService.getStats(start, end, uris, unique);
+        return statsService.viewStats(start, end, uris, unique);
     }
 
 }
