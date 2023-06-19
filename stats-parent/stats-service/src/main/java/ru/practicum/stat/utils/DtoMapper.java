@@ -6,7 +6,9 @@ import ru.practicum.stat.model.Hit;
 
 public class DtoMapper {
 
-    private DtoMapper() {}
+    private DtoMapper() {
+
+    }
 
     public static Hit toHit(HitsInputDto inputDto) {
         return Hit.builder()

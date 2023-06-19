@@ -1,6 +1,5 @@
 package ru.practicum.stat.service;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,20 +27,18 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Override
     public List<StatsOutputDto> viewStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        if (uris.isEmpty()) {
+        if (uris == null || uris.isEmpty()) {
             if (unique) {
-                // find all stats with dif ip
+                return statsRepository.getAllStatsDistinctIp(start, end);
             } else {
-                // find all stats with all ip
+                return statsRepository.getAllStats(start, end);
             }
         } else {
             if (unique) {
-                // find stat by uri with dif ip
+                return statsRepository.getStatsDistinctIp(start, end, uris);
             } else {
-                // find stat by uri with all ip
-
+                return statsRepository.getStats(start, end, uris);
             }
         }
-        return null;
     }
 }
