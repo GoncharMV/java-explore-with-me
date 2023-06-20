@@ -7,9 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-import lombok.*;
-
-
 public class User {
 
     private Long id;
