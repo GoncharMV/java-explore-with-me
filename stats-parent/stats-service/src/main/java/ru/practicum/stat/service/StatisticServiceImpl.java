@@ -28,13 +28,13 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     public List<StatsOutputDto> viewStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         if (uris == null || uris.isEmpty()) {
-            if (unique) {
+            if (Boolean.TRUE.equals(unique)) {
                 return statsRepository.getAllStatsDistinctIp(start, end);
             } else {
                 return statsRepository.getAllStats(start, end);
             }
         } else {
-            if (unique) {
+            if (Boolean.TRUE.equals(unique)) {
                 return statsRepository.getStatsDistinctIp(start, end, uris);
             } else {
                 return statsRepository.getStats(start, end, uris);
