@@ -18,17 +18,20 @@ public class CategoriesAdminController {
 
     @PostMapping
     public CategoryDto adminAddCategory(@RequestBody @Valid CategoryDto requestDto) {
+        log.info("Категория добавлена");
         return service.adminAddCategory(requestDto);
     }
 
     @DeleteMapping("/{catId}")
     public void adminRemoveCategory(@PathVariable Long catId) {
+        log.info("Категория удалена");
         service.adminRemoveCategory(catId);
     }
 
     @PatchMapping("/{catId}")
     public CategoryDto adminUpdateCategory(@PathVariable Long catId,
                                     @RequestBody CategoryDto requestDto) {
+        log.info("Данные категории изменены");
         return service.adminUpdateCategory(catId, requestDto);
     }
 

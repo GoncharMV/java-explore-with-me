@@ -19,11 +19,13 @@ public class CategoriesPublicController {
     @GetMapping
     public List<CategoryDto> getCategories(@RequestParam(name = "from", defaultValue = "0") int from,
                                            @RequestParam(name = "size", defaultValue = "10") int size) {
+        log.info("Категории найдены");
         return categoriesService.getCategories(from, size);
     }
 
     @GetMapping("/{catId}")
     public CategoryDto getCategory(@PathVariable Long catId) {
+        log.info("Категория найдена");
         return categoriesService.getCategory(catId);
     }
 
