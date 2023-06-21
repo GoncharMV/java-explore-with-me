@@ -2,7 +2,7 @@ package ru.practicum.participation_request.model;
 
 import ru.practicum.events.model.Event;
 import ru.practicum.users.model.User;
-import ru.practicum.utils.RequestStatus;
+import ru.practicum.utils.enums.RequestStatus;
 
 import java.time.LocalDateTime;
 

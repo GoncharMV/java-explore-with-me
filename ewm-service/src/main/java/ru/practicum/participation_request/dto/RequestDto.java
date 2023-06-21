@@ -1,6 +1,6 @@
 package ru.practicum.participation_request.dto;
 
-import ru.practicum.utils.RequestStatus;
+import ru.practicum.utils.enums.RequestStatus;
 
 import java.time.LocalDateTime;
 

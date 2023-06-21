@@ -18,20 +18,24 @@ public class UserAdminController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserDto> adminGetUsers(@RequestParam(name = "ids", required = false) List<Integer> ids,
+    public List<UserDto> adminGetUsers(@RequestParam(name = "ids", required = false) List<Long> ids,
                                        @RequestParam(name = "from", defaultValue = "0") int from,
                                        @RequestParam(name = "size", defaultValue = "10") int size) {
-        return userService.getUsers(ids, from, size);
+        log.info("Пользователи найдены");
+        return userService.adminGetUsers(ids, from, size);
     }
 
     @PostMapping
     public UserDto adminAddUser(@RequestBody @Valid UserDto requestDto) {
-        return userService.addUser(requestDto);
+        log.info("Пользователь зарегистрирован");
+
+        return userService.adminAddUser(requestDto);
     }
 
     @DeleteMapping("/{userId}")
     public void adminRemoveUser(@PathVariable Long userId) {
-        userService.removeUser(userId);
+        log.info("Пользователь удален");
+        userService.adminRemoveUser(userId);
     }
 
 }

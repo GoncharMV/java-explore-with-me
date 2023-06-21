@@ -5,7 +5,7 @@ import ru.practicum.categories.model.Category;
 import ru.practicum.compilations.model.Compilation;
 import ru.practicum.location.Location;
 import ru.practicum.users.model.User;
-import ru.practicum.utils.EventState;
+import ru.practicum.utils.enums.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
