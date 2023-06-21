@@ -2,10 +2,15 @@ package ru.practicum.categories.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.dto.CategoryDto;
+import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
+import ru.practicum.utils.FindEntityUtilService;
+import ru.practicum.utils.PageableUtil;
+import ru.practicum.utils.mapper.CategoryMapper;
 
 import java.util.List;
 
@@ -14,30 +19,42 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class CategoriesServiceImpl implements CategoriesService {
 
-    private final CategoriesRepository repository;
+    private final CategoriesRepository catRepository;
+    private final FindEntityUtilService findEntity;
 
     @Override
+    @Transactional
     public CategoryDto adminAddCategory(CategoryDto requestDto) {
-        return null;
+        Category cat = catRepository.save(CategoryMapper.toCat(requestDto));
+        return CategoryMapper.toCatDto(cat);
     }
 
     @Override
+    @Transactional
     public void adminRemoveCategory(Long catId) {
-
+        Category cat = findEntity.findCategoryOrElseThrow(catId);
+        catRepository.delete(cat);
     }
 
     @Override
+    @Transactional
     public CategoryDto adminUpdateCategory(Long catId, CategoryDto requestDto) {
-        return null;
+        Category cat = findEntity.findCategoryOrElseThrow(catId);
+        cat.setName(requestDto.getName());
+        Category newCat = catRepository.save(cat);
+        return CategoryMapper.toCatDto(newCat);
     }
 
     @Override
     public List<CategoryDto> getCategories(int from, int size) {
-        return null;
+        Pageable pageable = PageableUtil.pageManager(from, size, null);
+
+        return CategoryMapper.toCatsDto(catRepository.findAll(pageable).toList());
     }
 
     @Override
     public CategoryDto getCategory(Long catId) {
-        return null;
+        Category cat = findEntity.findCategoryOrElseThrow(catId);
+        return CategoryMapper.toCatDto(cat);
     }
 }

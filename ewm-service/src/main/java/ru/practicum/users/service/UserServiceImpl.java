@@ -10,7 +10,7 @@ import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
-import ru.practicum.utils.UserMapper;
+import ru.practicum.utils.mapper.UserMapper;
 
 import java.util.List;
 
@@ -24,6 +24,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional
     public void adminRemoveUser(Long userId) {
         User user = findEntity.findUserOrElseThrow(userId);
         userRepository.delete(user);
