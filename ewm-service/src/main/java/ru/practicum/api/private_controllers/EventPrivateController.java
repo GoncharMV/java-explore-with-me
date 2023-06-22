@@ -8,6 +8,7 @@ import ru.practicum.events.dto.EventOutputDto;
 import ru.practicum.events.service.EventService;
 import ru.practicum.participation_request.dto.EventRequestUpdateDto;
 import ru.practicum.participation_request.dto.RequestDto;
+import ru.practicum.participation_request.service.RequestService;
 
 import javax.validation.Valid;
 
@@ -18,6 +19,7 @@ import javax.validation.Valid;
 public class EventPrivateController {
 
     private final EventService eventService;
+    private final RequestService requestService;
 
     @GetMapping
     public EventOutputDto initiatorGetEvents(@PathVariable Long userId,
@@ -53,15 +55,15 @@ public class EventPrivateController {
     public RequestDto initiatorGetEventRequests(@PathVariable Long userId,
                                                 @PathVariable Long eventId) {
         log.info("Найдены запросы на участие");
-        return eventService.initiatorGetEventRequests(userId, eventId);
+        return requestService.initiatorGetEventRequests(userId, eventId);
     }
 
     @PatchMapping("/{eventId}/requests")
-    public EventRequestUpdateDto initiatorChangeRequestStatus(@PathVariable Long userId,
-                                             @PathVariable Long eventId,
-                                             @RequestBody EventRequestUpdateDto updateDto) {
+    public RequestDto initiatorChangeRequestStatus(@PathVariable Long userId,
+                                                   @PathVariable Long eventId,
+                                                   @RequestBody EventRequestUpdateDto updateDto) {
         log.info("Статус заявок изменён");
-        return eventService.initiatorChangeRequestStatus(userId, eventId, updateDto);
+        return requestService.initiatorChangeRequestStatus(userId, eventId, updateDto);
     }
 
 }

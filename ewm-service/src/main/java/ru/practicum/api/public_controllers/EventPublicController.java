@@ -28,7 +28,8 @@ public class EventPublicController {
             @RequestParam(name = "from", defaultValue = "0") int from,
             @RequestParam(name = "size", defaultValue = "10") int size) {
         log.info("События найдены");
-        return eventService.findEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+        return eventService.findEvents(text, categories, paid, rangeStart,
+                rangeEnd, onlyAvailable, sort, from, size);
     }
 
     @GetMapping("/{id}")

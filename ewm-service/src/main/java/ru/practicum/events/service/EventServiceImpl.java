@@ -54,19 +54,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public RequestDto initiatorGetEventRequests(Long userId, Long eventId) {
-        return null;
-    }
-
-    @Override
-    @Transactional
-    public EventRequestUpdateDto initiatorChangeRequestStatus(Long userId,
-                                                              Long eventId,
-                                                              EventRequestUpdateDto updateDto) {
-        return null;
-    }
-
-    @Override
     public List<EventOutputDto> findEvents(String text, List<Integer> categories, Boolean paid,
                                            String rangeStart, String rangeEnd, Boolean onlyAvailable,
                                            String sort, int from, int size) {

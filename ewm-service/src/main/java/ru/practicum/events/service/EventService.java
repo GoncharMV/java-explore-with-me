@@ -27,10 +27,6 @@ public interface EventService {
 
     EventOutputDto initiatorUpdateEvent(Long userId, Long eventId, EventInputDto requestDto);
 
-    RequestDto initiatorGetEventRequests(Long userId, Long eventId);
-
-    EventRequestUpdateDto initiatorChangeRequestStatus(Long userId, Long eventId, EventRequestUpdateDto updateDto);
-
     List<EventOutputDto> findEvents(String text,
                                     List<Integer> categories,
                                     Boolean paid,
