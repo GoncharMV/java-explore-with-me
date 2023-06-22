@@ -25,6 +25,8 @@ public class CategoriesAdminController {
     @DeleteMapping("/{catId}")
     public void adminRemoveCategory(@PathVariable Long catId) {
         log.info("Категория удалена");
+
+        // 204 ответ
         service.adminRemoveCategory(catId);
     }
 

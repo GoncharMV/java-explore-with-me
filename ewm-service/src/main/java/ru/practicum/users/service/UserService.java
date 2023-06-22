@@ -11,5 +11,7 @@ public interface UserService {
 
     UserDto adminAddUser(UserDto requestDto);
 
-    List<UserDto> adminGetUsers(List<Long> ids, int from, int size);
+    List<UserDto> adminGetUsers(List<Long> ids,
+                                int from,
+                                int size);
 }

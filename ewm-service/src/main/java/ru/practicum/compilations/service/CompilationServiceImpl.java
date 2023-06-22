@@ -11,6 +11,7 @@ import ru.practicum.compilations.dto.CompilationOutputDto;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Transactional(readOnly = true)
 public class CompilationServiceImpl implements CompilationService {
+
     @Override
     public CompilationOutputDto adminAddCompilation(CompilationInputDto requestDto) {
         return null;

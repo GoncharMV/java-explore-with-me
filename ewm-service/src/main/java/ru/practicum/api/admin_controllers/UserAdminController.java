@@ -28,13 +28,14 @@ public class UserAdminController {
     @PostMapping
     public UserDto adminAddUser(@RequestBody @Valid UserDto requestDto) {
         log.info("Пользователь зарегистрирован");
-
+        // 201 ответ сделать
         return userService.adminAddUser(requestDto);
     }
 
     @DeleteMapping("/{userId}")
     public void adminRemoveUser(@PathVariable Long userId) {
         log.info("Пользователь удален");
+        // 204 ответ сделать
         userService.adminRemoveUser(userId);
     }
 

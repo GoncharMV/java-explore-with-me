@@ -9,9 +9,11 @@ public interface CategoriesService {
 
     void adminRemoveCategory(Long catId);
 
-    CategoryDto adminUpdateCategory(Long catId, CategoryDto requestDto);
+    CategoryDto adminUpdateCategory(Long catId,
+                                    CategoryDto requestDto);
 
-    List<CategoryDto> getCategories(int from, int size);
+    List<CategoryDto> getCategories(int from,
+                                    int size);
 
     CategoryDto getCategory(Long catId);
 }
