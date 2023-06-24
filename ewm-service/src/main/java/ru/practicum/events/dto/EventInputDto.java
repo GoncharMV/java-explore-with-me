@@ -1,14 +1,15 @@
 package ru.practicum.events.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.practicum.location.LocationDto;
+import ru.practicum.location.dto.LocationDto;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
@@ -18,16 +19,33 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class EventInputDto {
 
+    private Long id;
+
+    @NotBlank
     @Size(min = 20, max = 2000)
     private String annotation;
-    private Long category;
 
+    @NotNull
+    @JsonProperty("category")
+    private Long categoryId;
+
+    @NotBlank
     @Size(min = 20, max = 7000)
     private String description;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
+
+    @NotNull
     private LocationDto location;
+
+    @NotNull
     private Boolean paid;
+
+    @NotNull
     private Integer participantLimit;
+
+    @NotNull
     private Boolean requestModeration;
 
     @NotBlank

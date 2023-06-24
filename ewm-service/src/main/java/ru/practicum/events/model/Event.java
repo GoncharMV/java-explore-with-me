@@ -2,7 +2,7 @@ package ru.practicum.events.model;
 
 import lombok.*;
 import ru.practicum.categories.model.Category;
-import ru.practicum.location.Location;
+import ru.practicum.location.model.Location;
 import ru.practicum.users.model.User;
 import ru.practicum.utils.enums.EventState;
 
@@ -26,10 +26,6 @@ public class Event {
     @Column(name = "annotation")
     private String annotation;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;
-
     @Column(name = "confirmed_requests")
     private Integer confirmedRequests;
 
@@ -41,14 +37,6 @@ public class Event {
 
     @Column(name = "event_date")
     private LocalDateTime eventDate;
-
-    @ManyToOne
-    @JoinColumn(name = "initiator_id")
-    private User initiator;
-
-    @ManyToOne
-    @JoinColumn(name = "location_id")
-    private Location location;
 
     @Column(name = "paid")
     private Boolean paid;
@@ -62,15 +50,27 @@ public class Event {
     @Column(name = "request_moderation")
     private Boolean requestModeration;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "state")
-    private EventState state;
-
     @Column(name = "title")
     private String title;
 
     @Column(name = "views")
     private Long views;
+
+    @ManyToOne
+    @JoinColumn(name = "initiator_id")
+    private User initiator;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @ManyToOne
+    @JoinColumn(name = "location_id")
+    private Location location;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state")
+    private EventState state;
 
 /*    @Column(name = "paid")
     private List<Compilation> compilations; */

@@ -4,12 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.categories.model.Category;
 import ru.practicum.events.dto.EventInputDto;
 import ru.practicum.events.dto.EventOutputDto;
+import ru.practicum.events.model.Event;
 import ru.practicum.events.repository.EventRepository;
-import ru.practicum.participation_request.dto.EventRequestUpdateDto;
-import ru.practicum.participation_request.dto.RequestDto;
+import ru.practicum.location.model.Location;
+import ru.practicum.location.service.LocationService;
+import ru.practicum.users.model.User;
+import ru.practicum.utils.FindEntityUtilService;
+import ru.practicum.utils.enums.EventState;
+import ru.practicum.utils.mapper.EventMapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -18,6 +25,8 @@ import java.util.List;
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
+    private final FindEntityUtilService findEntity;
+    private final LocationService locationService;
 
     @Override
     @Transactional
@@ -39,7 +48,18 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventOutputDto initiatorAddEvent(Long userId, EventInputDto requestDto) {
-        return null;
+        User initiator = findEntity.findUserOrElseThrow(userId);
+        Category cat = findEntity.findCategoryOrElseThrow(requestDto.getCategoryId());
+        Location loc = locationService.getLocationOrElseSave(requestDto.getLocation());
+
+        Event event = EventMapper.toEvent(requestDto, initiator, cat, loc);
+
+        event.setState(EventState.PENDING);
+        event.setCreatedOn(LocalDateTime.now());
+
+        event = eventRepository.save(event);
+
+        return EventMapper.toOutputDto(event);
     }
 
     @Override
@@ -64,4 +84,6 @@ public class EventServiceImpl implements EventService {
     public EventOutputDto getEvent(Long id) {
         return null;
     }
+
+
 }
