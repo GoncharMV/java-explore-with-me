@@ -3,7 +3,7 @@ package ru.practicum.api.public_controllers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.events.dto.EventOutputDto;
+import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.events.service.EventService;
 
 import java.util.List;
@@ -17,9 +17,9 @@ public class EventPublicController {
     private final EventService eventService;
 
     @GetMapping
-    public List<EventOutputDto> findEvents(
+    public List<EventOutputFullDto> findEvents(
             @RequestParam(name = "text", required = false) String text,
-            @RequestParam(name = "categories", required = false) List<Integer> categories,
+            @RequestParam(name = "categories", required = false) List<Long> categories,
             @RequestParam(name = "paid", required = false) Boolean paid,
             @RequestParam(name = "rangeStart", required = false) String rangeStart,
             @RequestParam(name = "rangeEnd", required = false) String rangeEnd,
@@ -33,7 +33,7 @@ public class EventPublicController {
     }
 
     @GetMapping("/{id}")
-    public EventOutputDto getEvent(@PathVariable Long id) {
+    public EventOutputFullDto getEvent(@PathVariable Long id) {
         log.info("Событие найдено");
         return eventService.getEvent(id);
     }

@@ -19,8 +19,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class EventInputDto {
 
-    private Long id;
-
     @NotBlank
     @Size(min = 20, max = 2000)
     private String annotation;
@@ -33,7 +31,7 @@ public class EventInputDto {
     @Size(min = 20, max = 7000)
     private String description;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @NotNull
@@ -51,4 +49,5 @@ public class EventInputDto {
     @NotBlank
     @Size(min = 3, max = 120)
     private String title;
+
 }

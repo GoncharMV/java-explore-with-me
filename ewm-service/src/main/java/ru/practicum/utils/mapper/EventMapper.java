@@ -2,10 +2,14 @@ package ru.practicum.utils.mapper;
 
 import ru.practicum.categories.model.Category;
 import ru.practicum.events.dto.EventInputDto;
-import ru.practicum.events.dto.EventOutputDto;
+import ru.practicum.events.dto.EventOutputFullDto;
+import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.model.Event;
 import ru.practicum.location.model.Location;
 import ru.practicum.users.model.User;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class EventMapper {
 
@@ -14,7 +18,6 @@ public final class EventMapper {
 
     public static Event toEvent(EventInputDto dto, User initiator, Category category, Location location) {
         return Event.builder()
-                .id(dto.getId())
                 .annotation(dto.getAnnotation())
                 .description(dto.getDescription())
                 .eventDate(dto.getEventDate())
@@ -28,8 +31,8 @@ public final class EventMapper {
                 .build();
     }
 
-    public static EventOutputDto toOutputDto(Event event) {
-        return EventOutputDto.builder()
+    public static EventOutputFullDto toOutputDto(Event event) {
+        return EventOutputFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCatDto(event.getCategory()))
@@ -46,5 +49,37 @@ public final class EventMapper {
                 .title(event.getTitle())
                 .build();
     }
+
+    private static EventShortDto toShortDto(Event event) {
+        return EventShortDto.builder()
+                .annotation(event.getAnnotation())
+                .category(CategoryMapper.toCatDto(event.getCategory()))
+                .confirmedRequests(event.getConfirmedRequests())
+                .eventDate(event.getEventDate())
+                .id(event.getId())
+                .initiator(UserMapper.toPublicUser(event.getInitiator()))
+                .paid(event.getPaid())
+                .title(event.getTitle())
+                .views(event.getViews())
+                .build();
+    }
+
+    public static List<EventShortDto> toEventShortList(List<Event> events) {
+        List<EventShortDto> eventsDto = new ArrayList<>();
+        for (Event e : events) {
+            eventsDto.add(toShortDto(e));
+        }
+        return eventsDto;
+    }
+
+    public static List<EventOutputFullDto> toEventFullDtoList(List<Event> events) {
+        List<EventOutputFullDto> eventsDto = new ArrayList<>();
+        for (Event e : events) {
+            eventsDto.add(toOutputDto(e));
+        }
+        return eventsDto;
+    }
+
+
 
 }

@@ -2,6 +2,7 @@ package ru.practicum.compilations.dto;
 
 import lombok.*;
 import ru.practicum.events.dto.EventInputDto;
+import ru.practicum.events.dto.EventShortDto;
 
 import java.util.List;
 
@@ -15,6 +16,6 @@ public class CompilationOutputDto {
     private Long id;
     private String title;
     private Boolean pinned;
-    private List<EventInputDto> events;
+    private List<EventShortDto> events;
 
 }
