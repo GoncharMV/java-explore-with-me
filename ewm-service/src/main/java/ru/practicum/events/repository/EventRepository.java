@@ -10,6 +10,7 @@ import ru.practicum.utils.enums.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
@@ -23,4 +24,18 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                 LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable pageable);
 
     List<Event> findAllByInitiator(User initiator, Pageable pageable);
+
+    Optional<Event> findByIdAndStateIs(Long eventId, EventState state);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.state = ru.practicum.utils.enums.EventState.PUBLISHED " +
+            "AND (e.annotation LIKE CONCAT('%',?1,'%') OR e.description LIKE CONCAT('%',?1,'%')) " +
+            "AND e.category.id IN ?2 " +
+            "AND e.paid = ?3 " +
+            "AND e.eventDate BETWEEN ?4 AND ?5 " +
+            "AND ((?6 = true AND e.participantLimit = 0) " +
+            "OR (?6 = true AND e.participantLimit > e.confirmedRequests) " +
+            "OR (?6 = false))")
+    List<Event> findPublicEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
+                                 LocalDateTime rangeEnd, Boolean onlyAvailable, Pageable pageable);
 }

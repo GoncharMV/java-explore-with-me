@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.events.dto.EventInputDto;
 import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.events.dto.UpdateEventAdminRequest;
 import ru.practicum.events.service.EventService;
+import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.enums.EventState;
 
 import java.time.LocalDateTime;
@@ -21,7 +21,6 @@ import java.util.List;
 public class EventAdminController {
 
     private final EventService eventService;
-    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -29,9 +28,9 @@ public class EventAdminController {
             @RequestParam(name = "users", required = false) List<Long> users,
             @RequestParam(name = "states", required = false) List<EventState> states,
             @RequestParam(name = "categories", required = false) List<Long> categories,
-            @RequestParam(name = "rangeStart", required = false) @DateTimeFormat(pattern = DATE_FORMAT)
+            @RequestParam(name = "rangeStart", required = false) @DateTimeFormat(pattern = ConstantUtil.DATA_FORMAT)
             LocalDateTime rangeStart,
-            @RequestParam(name = "rangeEnd", required = false) @DateTimeFormat(pattern = DATE_FORMAT)
+            @RequestParam(name = "rangeEnd", required = false) @DateTimeFormat(pattern = ConstantUtil.DATA_FORMAT)
             LocalDateTime rangeEnd,
             @RequestParam(name = "from", defaultValue = "0") int from,
             @RequestParam(name = "size", defaultValue = "10") int size) {

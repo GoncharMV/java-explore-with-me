@@ -6,10 +6,12 @@ import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.model.Event;
 import ru.practicum.location.model.Location;
+import ru.practicum.participation_request.model.Request;
 import ru.practicum.users.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class EventMapper {
 
@@ -31,12 +33,12 @@ public final class EventMapper {
                 .build();
     }
 
-    public static EventOutputFullDto toOutputDto(Event event) {
+    public static EventOutputFullDto toOutputDto(Event event, List<Request> confirmedRequests) {
         return EventOutputFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCatDto(event.getCategory()))
-                .confirmedRequests(event.getConfirmedRequests())
+                .confirmedRequests(confirmedRequests.size())
                 .createdOn(event.getCreatedOn())
                 .description(event.getDescription())
                 .eventDate(event.getEventDate())
@@ -50,11 +52,11 @@ public final class EventMapper {
                 .build();
     }
 
-    private static EventShortDto toShortDto(Event event) {
+    private static EventShortDto toShortDto(Event event, List<Request> confirmedRequests) {
         return EventShortDto.builder()
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCatDto(event.getCategory()))
-                .confirmedRequests(event.getConfirmedRequests())
+                .confirmedRequests(confirmedRequests.size())
                 .eventDate(event.getEventDate())
                 .id(event.getId())
                 .initiator(UserMapper.toPublicUser(event.getInitiator()))
@@ -64,18 +66,20 @@ public final class EventMapper {
                 .build();
     }
 
-    public static List<EventShortDto> toEventShortList(List<Event> events) {
+    public static List<EventShortDto> toEventShortList(List<Event> events,
+                                                       Map<Event, List<Request>> confirmedRequests) {
         List<EventShortDto> eventsDto = new ArrayList<>();
         for (Event e : events) {
-            eventsDto.add(toShortDto(e));
+            eventsDto.add(toShortDto(e, confirmedRequests.getOrDefault(e, List.of())));
         }
         return eventsDto;
     }
 
-    public static List<EventOutputFullDto> toEventFullDtoList(List<Event> events) {
+    public static List<EventOutputFullDto> toEventFullDtoList(List<Event> events,
+                                                              Map<Event, List<Request>> confirmedRequests) {
         List<EventOutputFullDto> eventsDto = new ArrayList<>();
         for (Event e : events) {
-            eventsDto.add(toOutputDto(e));
+            eventsDto.add(toOutputDto(e, confirmedRequests.getOrDefault(e, List.of())));
         }
         return eventsDto;
     }

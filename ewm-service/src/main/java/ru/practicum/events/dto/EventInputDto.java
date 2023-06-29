@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.location.dto.LocationDto;
+import ru.practicum.utils.ConstantUtil;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -31,7 +32,7 @@ public class EventInputDto {
     @Size(min = 20, max = 7000)
     private String description;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = ConstantUtil.DATA_FORMAT)
     private LocalDateTime eventDate;
 
     @NotNull
