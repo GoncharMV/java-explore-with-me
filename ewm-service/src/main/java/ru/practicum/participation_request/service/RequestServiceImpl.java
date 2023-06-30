@@ -16,6 +16,7 @@ import ru.practicum.utils.enums.RequestStatus;
 import ru.practicum.utils.mapper.RequestMapper;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -48,12 +49,22 @@ public class RequestServiceImpl implements RequestService {
         findEntity.checkEventInitiator(event, user);
 
         List<Request> requests = requestRepository.findRequestByIdIn(updateDto.getRequestIds());
+        List<Request> confRequests = new ArrayList<>();
+        List<Request> rejRequests = new ArrayList<>();
 
         for (Request r : requests) {
             r.setStatus(updateDto.getStatus());
+            if (updateDto.getStatus().equals(RequestStatus.CONFIRMED)) {
+                confRequests.add(r);
+            } else if (updateDto.getStatus().equals(RequestStatus.REJECTED)) {
+                rejRequests.add(r);
+            }
         }
 
-        return null;
+        return RequestUpdateStatusResultDto.builder()
+                .confirmedRequests(RequestMapper.toListDto(confRequests))
+                .rejectedRequests(RequestMapper.toListDto(rejRequests))
+                .build();
     }
 
     @Override
