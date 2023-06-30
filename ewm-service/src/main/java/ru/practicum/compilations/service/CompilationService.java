@@ -12,4 +12,8 @@ public interface CompilationService {
     List<CompilationOutputDto> getCompilations(Boolean pinned, int from, int size);
 
     CompilationOutputDto getCompilation(Long compId);
+
+    void adminRemoveCompilation(Long compId);
+
+    CompilationOutputDto adminUpdateCompilation(Long compId, CompilationInputDto requestDto);
 }

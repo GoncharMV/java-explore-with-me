@@ -8,11 +8,14 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.dto.CategoryDto;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
+import ru.practicum.events.model.Event;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
+import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.CategoryMapper;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -25,6 +28,13 @@ public class CategoriesServiceImpl implements CategoriesService {
     @Override
     @Transactional
     public CategoryDto adminAddCategory(CategoryDto requestDto) {
+
+        Category checkCat = catRepository.findCategoryByName(requestDto.getName());
+
+        if (checkCat != null) {
+            throw new RequestNotProcessedException("Категория с данным названием существует");
+        }
+
         Category cat = catRepository.save(CategoryMapper.toCat(requestDto));
         return CategoryMapper.toCatDto(cat);
     }
@@ -33,6 +43,10 @@ public class CategoriesServiceImpl implements CategoriesService {
     @Transactional
     public void adminRemoveCategory(Long catId) {
         Category cat = findEntity.findCategoryOrElseThrow(catId);
+        List<Event> events = findEntity.findCategoryEvents(cat);
+
+        if (!events.isEmpty()) throw new RequestNotProcessedException("Невозможно удалить категорию");
+
         catRepository.delete(cat);
     }
 

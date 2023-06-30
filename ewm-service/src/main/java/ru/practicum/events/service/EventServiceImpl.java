@@ -17,6 +17,7 @@ import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
 import ru.practicum.utils.enums.EventState;
 import ru.practicum.utils.enums.StateAction;
+import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.EventMapper;
 
 import java.time.LocalDateTime;
@@ -54,7 +55,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.adminFindEvents(users, states, categories,
                                                             rangeStart, rangeEnd, pageable);
 
-        return EventMapper.toEventFullDtoList(events, getRequestsMap(events));
+        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events));
     }
 
     @Override
@@ -64,7 +65,7 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventRepository.findAllByInitiator(initiator, pageable);
 
-        return EventMapper.toEventShortList(events, getRequestsMap(events));
+        return EventMapper.toEventShortList(events, findEntity.findConfirmedRequestsMap(events));
     }
 
     @Override
@@ -73,6 +74,10 @@ public class EventServiceImpl implements EventService {
         User initiator = findEntity.findUserOrElseThrow(userId);
         Category cat = findEntity.findCategoryOrElseThrow(requestDto.getCategoryId());
         Location loc = locationService.getLocationOrElseSave(requestDto.getLocation());
+
+        if (requestDto.getPaid() == null) requestDto.setPaid(false);
+        if (requestDto.getRequestModeration() == null) requestDto.setRequestModeration(true);
+        if (requestDto.getParticipantLimit() == null) requestDto.setParticipantLimit(0);
 
         Event event = EventMapper.toEvent(requestDto, initiator, cat, loc);
         event.setCreatedOn(LocalDateTime.now());
@@ -118,7 +123,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findPublicEvents(text, categories, paid,
                 rangeStart, rangeEnd, onlyAvailable, pageable);
 
-        return EventMapper.toEventFullDtoList(events, getRequestsMap(events));
+        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events));
     }
 
     @Override
@@ -130,9 +135,15 @@ public class EventServiceImpl implements EventService {
     private void adminUpdateEventStatus(Event event, StateAction stateAction) {
         switch (stateAction) {
             case REJECT_EVENT:
+                if (event.getState().equals(EventState.PUBLISHED)) {
+                    throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+                }
                 event.setState(EventState.CANCELED);
                 break;
             case PUBLISH_EVENT:
+                if (event.getState().equals(EventState.PUBLISHED) || event.getState().equals(EventState.CANCELED)) {
+                    throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+                }
                 event.setState(EventState.PUBLISHED);
                 break;
             default:
@@ -143,6 +154,9 @@ public class EventServiceImpl implements EventService {
     private void userUpdateEventStatus(Event event, StateAction stateAction) {
         switch (stateAction) {
             case CANCEL_REVIEW:
+                if (event.getState().equals(EventState.PUBLISHED)) {
+                    throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+                }
                 event.setState(EventState.CANCELED);
                 break;
             case SEND_TO_REVIEW:
@@ -174,16 +188,6 @@ public class EventServiceImpl implements EventService {
         if (dto.getTitle() != null && !dto.getTitle().isBlank()) event.setTitle(dto.getTitle());
 
         return event;
-    }
-
-    private Map<Event, List<Request>> getRequestsMap(List<Event> events) {
-        Map<Event, List<Request>> confRequests = new HashMap<>();
-
-        for (Event event : events) {
-            List<Request> requests = findEntity.findConfirmedEventRequests(event);
-            confRequests.put(event, requests);
-        }
-        return confRequests;
     }
 
     private List<Request> getRequestList(Event event) {

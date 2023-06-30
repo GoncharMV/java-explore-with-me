@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import ru.practicum.categories.model.Category;
 import ru.practicum.events.model.Event;
 import ru.practicum.users.model.User;
 import ru.practicum.utils.enums.EventState;
@@ -14,6 +15,8 @@ import java.util.Optional;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
+
+    List<Event> findByCategory(Category category);
 
     @Query("SELECT e FROM Event e " +
             "WHERE e.initiator.id IN ?1 " +
@@ -37,4 +40,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "OR (?6 = false))")
     List<Event> findPublicEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
                                  LocalDateTime rangeEnd, Boolean onlyAvailable, Pageable pageable);
+
+    List<Event> findByIdIn(List<Long> ids);
 }

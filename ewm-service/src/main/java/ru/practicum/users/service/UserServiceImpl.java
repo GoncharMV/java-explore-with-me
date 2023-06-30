@@ -10,6 +10,7 @@ import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
+import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.UserMapper;
 
 import java.util.List;
@@ -33,6 +34,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto adminAddUser(UserDto requestDto) {
+        User checkUser = userRepository.findByEmail(requestDto.getEmail());
+        if (checkUser != null) throw new RequestNotProcessedException("Пользователь с таким именем существует");
         User user = userRepository.save(UserMapper.toUser(requestDto));
         return UserMapper.toUserDto(user);
     }

@@ -13,6 +13,7 @@ import ru.practicum.participation_request.repository.RequestRepository;
 import ru.practicum.users.model.User;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.enums.RequestStatus;
+import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.RequestMapper;
 
 import java.time.LocalDateTime;
@@ -52,19 +53,38 @@ public class RequestServiceImpl implements RequestService {
         List<Request> confRequests = new ArrayList<>();
         List<Request> rejRequests = new ArrayList<>();
 
+        RequestStatus status = updateDto.getStatus();
+
         for (Request r : requests) {
-            r.setStatus(updateDto.getStatus());
-            if (updateDto.getStatus().equals(RequestStatus.CONFIRMED)) {
-                confRequests.add(r);
-            } else if (updateDto.getStatus().equals(RequestStatus.REJECTED)) {
+            if (r.getStatus().equals(RequestStatus.CONFIRMED)) {
+                throw new RequestNotProcessedException("Невозможно изменить статус принятой заявки");
+            }
+
+            if (status.equals(RequestStatus.REJECTED)) {
+                r.setStatus(status);
                 rejRequests.add(r);
+            }
+
+            Integer limit = event.getParticipantLimit();
+
+            if (status.equals(RequestStatus.CONFIRMED)) {
+                if (limit == 0) {
+                    r.setStatus(status);
+                    confRequests.add(r);
+                }
+
+                if (confRequests.size() < limit) {
+                    confRequests.add(r);
+                } else if (confRequests.size() == limit) {
+                    throw new RequestNotProcessedException("Лимит заявок исчерпан");
+                }
             }
         }
 
-        return RequestUpdateStatusResultDto.builder()
-                .confirmedRequests(RequestMapper.toListDto(confRequests))
-                .rejectedRequests(RequestMapper.toListDto(rejRequests))
-                .build();
+        RequestUpdateStatusResultDto result = new RequestUpdateStatusResultDto();
+        result.setConfirmedRequests(RequestMapper.toListDto(confRequests));
+        result.setRejectedRequests(RequestMapper.toListDto(rejRequests));
+        return result;
     }
 
     @Override
@@ -78,7 +98,9 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public RequestDto participantAddRequest(Long userId, Long eventId) {
         User user = findEntity.findUserOrElseThrow(userId);
-        Event event = findEntity.findEventOrElseThrow(eventId);
+        Event event = findEntity.findPublishedEventOrElseThrow(eventId);
+
+        findEntity.checkRequestInitiator(event, user);
 
         Request newRequest = Request.builder()
                 .requester(user)
@@ -99,7 +121,11 @@ public class RequestServiceImpl implements RequestService {
         Request request = findEntity.findRequestOrElseThrow(requestId);
         findEntity.checkRequestRequestor(request, user);
 
-        request.setStatus(RequestStatus.CANCELED);
+        if (!request.getStatus().equals(RequestStatus.CONFIRMED)) {
+            request.setStatus(RequestStatus.CANCELED);
+        } else {
+            throw new RequestNotProcessedException("Нельзя отменить принятую заявку");
+        }
 
         return RequestMapper.toRequestDto(request);
     }

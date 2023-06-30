@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
+import ru.practicum.compilations.model.Compilation;
+import ru.practicum.compilations.repository.CompilationRepository;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.repository.EventRepository;
 import ru.practicum.participation_request.model.Request;
@@ -17,7 +19,9 @@ import ru.practicum.utils.enums.RequestStatus;
 import ru.practicum.utils.exception.ObjectNotFoundException;
 import ru.practicum.utils.exception.RequestNotProcessedException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -28,6 +32,7 @@ public class FindEntityUtilService {
     private final CategoriesRepository catRepository;
     private final EventRepository eventRepository;
     private final RequestRepository requestRepository;
+    private final CompilationRepository compilationRepository;
 
     public User findUserOrElseThrow(Long userId) {
         return userRepository.findById(userId)
@@ -49,6 +54,14 @@ public class FindEntityUtilService {
                 .orElseThrow(() -> new ObjectNotFoundException("Мероприятие не найдено или недоступно"));
     }
 
+    public List<Event> findCategoryEvents(Category cat) {
+        return eventRepository.findByCategory(cat);
+    }
+
+    public List<Event> findEventsByIds(List<Long> ids) {
+        return eventRepository.findByIdIn(ids);
+    }
+
     public Request findRequestOrElseThrow(Long requestId) {
         return requestRepository.findById(requestId)
                 .orElseThrow(() -> new ObjectNotFoundException("Заявка на участие не найдена"));
@@ -58,9 +71,30 @@ public class FindEntityUtilService {
         return requestRepository.findRequestByEventAndStatusIs(event, RequestStatus.CONFIRMED);
     }
 
+    public Map<Event, List<Request>> findConfirmedRequestsMap(List<Event> events) {
+        Map<Event, List<Request>> confRequests = new HashMap<>();
+
+        for (Event event : events) {
+            List<Request> requests = findConfirmedEventRequests(event);
+            confRequests.put(event, requests);
+        }
+        return confRequests;
+    }
+
+    public Compilation findCompilationOrThrow(Long compId) {
+        return compilationRepository.findById(compId)
+                .orElseThrow(() -> new ObjectNotFoundException("Подборка на участие не найдена"));
+    }
+
     public void checkEventInitiator(Event event, User user) {
         if (!event.getInitiator().equals(user)) {
             throw new RequestNotProcessedException("Доступ к функции есть только у создателя мероприятия");
+        }
+    }
+
+    public void checkRequestInitiator(Event event, User user) {
+        if (event.getInitiator().equals(user)) {
+            throw new RequestNotProcessedException("Создатель мероприятия не может подавать заявку на участие");
         }
     }
 

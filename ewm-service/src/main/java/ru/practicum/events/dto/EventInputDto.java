@@ -38,13 +38,10 @@ public class EventInputDto {
     @NotNull
     private LocationDto location;
 
-    @NotNull
     private Boolean paid;
 
-    @NotNull
     private Integer participantLimit;
 
-    @NotNull
     private Boolean requestModeration;
 
     @NotBlank

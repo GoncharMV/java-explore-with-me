@@ -11,6 +11,7 @@ import ru.practicum.events.service.EventService;
 import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.enums.EventState;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class EventAdminController {
     @PatchMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventOutputFullDto adminUpdateEvent(@PathVariable Long eventId,
-                                               @RequestBody UpdateEventAdminRequest requestDto) {
+                                               @RequestBody @Valid UpdateEventAdminRequest requestDto) {
         log.info("Событие отредактировано");
         return eventService.adminUpdateEvent(eventId, requestDto);
     }

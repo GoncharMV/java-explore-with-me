@@ -55,7 +55,7 @@ public class EventPrivateController {
     @ResponseStatus(HttpStatus.OK)
     public EventOutputFullDto initiatorUpdateEvent(@PathVariable Long userId,
                                                    @PathVariable Long eventId,
-                                                   @RequestBody UpdateEventUserRequest requestDto) {
+                                                   @RequestBody @Valid UpdateEventUserRequest requestDto) {
         log.info("Событие обновлено");
         return eventService.initiatorUpdateEvent(userId, eventId, requestDto);
     }
