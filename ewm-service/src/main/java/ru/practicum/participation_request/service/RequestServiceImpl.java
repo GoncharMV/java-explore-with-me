@@ -74,6 +74,7 @@ public class RequestServiceImpl implements RequestService {
                 }
 
                 if (confRequests.size() < limit) {
+                    r.setStatus(status);
                     confRequests.add(r);
                 } else if (confRequests.size() == limit) {
                     throw new RequestNotProcessedException("Лимит заявок исчерпан");

@@ -6,6 +6,7 @@ import ru.practicum.compilations.model.Compilation;
 import ru.practicum.events.model.Event;
 import ru.practicum.participation_request.model.Request;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,15 @@ public final class CompilationMapper {
                 .pinned(compilation.getPinned())
                 .events(EventMapper.toEventShortList(compilation.getEvents(), confirmedRequests))
                 .build();
+    }
+
+    public static List<CompilationOutputDto> toCompDtoList(List<Compilation> comps,
+                                                           Map<Event, List<Request>> confirmedRequests) {
+        List<CompilationOutputDto> compDto = new ArrayList<>();
+        for (Compilation c : comps) {
+            compDto.add(toCompilationDto(c, confirmedRequests));
+        }
+        return compDto;
     }
 
 }

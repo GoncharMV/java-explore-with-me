@@ -2,12 +2,14 @@ package ru.practicum.events.model;
 
 import lombok.*;
 import ru.practicum.categories.model.Category;
+import ru.practicum.compilations.model.Compilation;
 import ru.practicum.location.model.Location;
 import ru.practicum.users.model.User;
 import ru.practicum.utils.enums.EventState;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -69,6 +71,4 @@ public class Event {
     @Column(name = "state")
     private EventState state;
 
-/*    @Column(name = "paid")
-    private List<Compilation> compilations; */
 }

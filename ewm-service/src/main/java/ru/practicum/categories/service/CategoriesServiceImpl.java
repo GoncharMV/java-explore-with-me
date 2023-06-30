@@ -53,6 +53,12 @@ public class CategoriesServiceImpl implements CategoriesService {
     @Override
     @Transactional
     public CategoryDto adminUpdateCategory(Long catId, CategoryDto requestDto) {
+        Category checkCat = catRepository.findCategoryByName(requestDto.getName());
+
+        if (checkCat != null) {
+            throw new RequestNotProcessedException("Категория с данным названием существует");
+        }
+
         Category cat = findEntity.findCategoryOrElseThrow(catId);
         cat.setName(requestDto.getName());
         Category newCat = catRepository.save(cat);
