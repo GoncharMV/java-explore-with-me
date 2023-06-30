@@ -11,6 +11,7 @@ import ru.practicum.events.dto.UpdateEventUserRequest;
 import ru.practicum.events.service.EventService;
 import ru.practicum.participation_request.dto.EventRequestUpdateDto;
 import ru.practicum.participation_request.dto.RequestDto;
+import ru.practicum.participation_request.dto.RequestUpdateStatusResultDto;
 import ru.practicum.participation_request.service.RequestService;
 
 import javax.validation.Valid;
@@ -61,17 +62,18 @@ public class EventPrivateController {
 
     @GetMapping("/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public RequestDto initiatorGetEventRequests(@PathVariable Long userId,
-                                                @PathVariable Long eventId) {
+    public List<RequestDto> initiatorGetEventRequests(@PathVariable Long userId,
+                                                      @PathVariable Long eventId) {
         log.info("Найдены запросы на участие");
         return requestService.initiatorGetEventRequests(userId, eventId);
     }
 
     @PatchMapping("/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public RequestDto initiatorChangeRequestStatus(@PathVariable Long userId,
-                                                   @PathVariable Long eventId,
-                                                   @RequestBody EventRequestUpdateDto updateDto) {
+    public RequestUpdateStatusResultDto initiatorChangeRequestStatus(
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @RequestBody EventRequestUpdateDto updateDto) {
         log.info("Статус заявок изменён");
         return requestService.initiatorChangeRequestStatus(userId, eventId, updateDto);
     }

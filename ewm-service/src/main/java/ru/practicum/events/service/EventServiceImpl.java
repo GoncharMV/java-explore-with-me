@@ -42,9 +42,7 @@ public class EventServiceImpl implements EventService {
 
         Event updateEvent = updateEvent(event, dto);
 
-        List<Request> confRequests = findEntity.findEventRequests(event);
-
-        return EventMapper.toOutputDto(updateEvent, confRequests);
+        return EventMapper.toOutputDto(updateEvent, getRequestList(event));
     }
 
     @Override
@@ -56,14 +54,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.adminFindEvents(users, states, categories,
                                                             rangeStart, rangeEnd, pageable);
 
-        Map<Event, List<Request>> confRequests = new HashMap<>();
-
-        for (Event event : events) {
-            List<Request> requests = findEntity.findEventRequests(event);
-            confRequests.put(event, requests);
-        }
-
-        return EventMapper.toEventFullDtoList(events, confRequests);
+        return EventMapper.toEventFullDtoList(events, getRequestsMap(events));
     }
 
     @Override
@@ -73,14 +64,7 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventRepository.findAllByInitiator(initiator, pageable);
 
-        Map<Event, List<Request>> confRequests = new HashMap<>();
-
-        for (Event event : events) {
-            List<Request> requests = findEntity.findEventRequests(event);
-            confRequests.put(event, requests);
-        }
-
-        return EventMapper.toEventShortList(events, confRequests);
+        return EventMapper.toEventShortList(events, getRequestsMap(events));
     }
 
     @Override
@@ -101,30 +85,28 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventOutputFullDto initiatorGetEvent(Long userId, Long eventId) {
-        findEntity.findUserOrElseThrow(userId);
+        User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
-        findEntity.checkEventInitiator(event, userId);
+        findEntity.checkEventInitiator(event, user);
 
-        List<Request> confRequests = findEntity.findEventRequests(event);
-
-        return EventMapper.toOutputDto(event, confRequests);
+        return EventMapper.toOutputDto(event, getRequestList(event));
     }
 
     @Override
     @Transactional
     public EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventUserRequest dto) {
 
+        User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
 
-        findEntity.checkEventInitiator(event, userId);
+        findEntity.checkEventInitiator(event, user);
         findEntity.checkUnpublishedEvent(event);
 
         if (dto.getStateAction() != null) userUpdateEventStatus(event, dto.getStateAction());
 
         Event updateEvent = updateEvent(event, dto);
-        List<Request> confRequests = findEntity.findEventRequests(updateEvent);
 
-        return EventMapper.toOutputDto(updateEvent, confRequests);
+        return EventMapper.toOutputDto(updateEvent, getRequestList(updateEvent));
     }
 
     @Override
@@ -136,21 +118,13 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findPublicEvents(text, categories, paid,
                 rangeStart, rangeEnd, onlyAvailable, pageable);
 
-        Map<Event, List<Request>> confRequests = new HashMap<>();
-
-        for (Event event : events) {
-            List<Request> requests = findEntity.findEventRequests(event);
-            confRequests.put(event, requests);
-        }
-
-        return EventMapper.toEventFullDtoList(events, confRequests);
+        return EventMapper.toEventFullDtoList(events, getRequestsMap(events));
     }
 
     @Override
     public EventOutputFullDto getEvent(Long id) {
         Event event = findEntity.findPublishedEventOrElseThrow(id);
-        List<Request> confRequests = findEntity.findEventRequests(event);
-        return EventMapper.toOutputDto(event, confRequests);
+        return EventMapper.toOutputDto(event, getRequestList(event));
     }
 
     private void adminUpdateEventStatus(Event event, StateAction stateAction) {
@@ -202,4 +176,17 @@ public class EventServiceImpl implements EventService {
         return event;
     }
 
+    private Map<Event, List<Request>> getRequestsMap(List<Event> events) {
+        Map<Event, List<Request>> confRequests = new HashMap<>();
+
+        for (Event event : events) {
+            List<Request> requests = findEntity.findConfirmedEventRequests(event);
+            confRequests.put(event, requests);
+        }
+        return confRequests;
+    }
+
+    private List<Request> getRequestList(Event event) {
+        return findEntity.findConfirmedEventRequests(event);
+    }
 }

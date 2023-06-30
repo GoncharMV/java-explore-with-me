@@ -49,12 +49,17 @@ public class FindEntityUtilService {
                 .orElseThrow(() -> new ObjectNotFoundException("Мероприятие не найдено или недоступно"));
     }
 
-    public List<Request> findEventRequests(Event event) {
-        return requestRepository.findRequestByEventIdAndStatusIs(event.getId(), RequestStatus.CONFIRMED);
+    public Request findRequestOrElseThrow(Long requestId) {
+        return requestRepository.findById(requestId)
+                .orElseThrow(() -> new ObjectNotFoundException("Заявка на участие не найдена"));
     }
 
-    public void checkEventInitiator(Event event, Long userId) {
-        if (!event.getInitiator().getId().equals(userId)) {
+    public List<Request> findConfirmedEventRequests(Event event) {
+        return requestRepository.findRequestByEventAndStatusIs(event, RequestStatus.CONFIRMED);
+    }
+
+    public void checkEventInitiator(Event event, User user) {
+        if (!event.getInitiator().equals(user)) {
             throw new RequestNotProcessedException("Доступ к функции есть только у создателя мероприятия");
         }
     }
@@ -62,6 +67,12 @@ public class FindEntityUtilService {
     public void checkUnpublishedEvent(Event event) {
         if (event.getState().equals(EventState.PUBLISHED)) {
             throw new RequestNotProcessedException("Редактировать можно толкьо неопубликованные события");
+        }
+    }
+
+    public void checkRequestRequestor(Request request, User user) {
+        if (!request.getRequester().equals(user)) {
+            throw new RequestNotProcessedException("Доступ к функции есть только у создателя заявки");
         }
     }
 
