@@ -16,12 +16,16 @@ import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
 import ru.practicum.utils.enums.EventState;
 import ru.practicum.utils.enums.RequestStatus;
+import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.exception.ObjectNotFoundException;
 import ru.practicum.utils.exception.RequestNotProcessedException;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -49,9 +53,14 @@ public class FindEntityUtilService {
                 .orElseThrow(() -> new ObjectNotFoundException("Мероприятие не найдено"));
     }
 
-    public Event findPublishedEventOrElseThrow(Long eventId) {
+    public Event findPublishedEventOrThrow(Long eventId) {
         return eventRepository.findByIdAndStateIs(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new ObjectNotFoundException("Мероприятие не найдено или недоступно"));
+    }
+
+    public Event checkEventPublished(Long eventId) {
+        return eventRepository.findByIdAndStateIs(eventId, EventState.PUBLISHED)
+                .orElseThrow(() -> new RequestNotProcessedException("Мероприятие недоступно"));
     }
 
     public List<Event> findCategoryEvents(Category cat) {
@@ -65,6 +74,23 @@ public class FindEntityUtilService {
     public Request findRequestOrElseThrow(Long requestId) {
         return requestRepository.findById(requestId)
                 .orElseThrow(() -> new ObjectNotFoundException("Заявка на участие не найдена"));
+    }
+
+    public void checkRepeatedRequest(Event event, User requester) {
+        Request request = requestRepository.findByEventAndRequester(event, requester);
+
+        if (request != null) {
+            throw new RequestNotProcessedException("Заявка на участие уже подана");
+        }
+    }
+
+    public void checkIfLimitIsFull(Event event) {
+        List<Request> requests = findConfirmedEventRequests(event);
+
+        if (event.getParticipantLimit() != 0 && event.getParticipantLimit() == requests.size()) {
+            throw new RequestNotProcessedException("Лимит заявок исчерпан");
+        }
+
     }
 
     public List<Request> findConfirmedEventRequests(Event event) {
@@ -110,7 +136,27 @@ public class FindEntityUtilService {
         }
     }
 
+    public void checkEventDate(LocalDateTime eventDate) {
+        if (eventDate.isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new BadRequestException("Невалидная дата события");
+        }
+    }
+
     public void unsupportedStatus() {
         throw new RequestNotProcessedException("Статус не поддерживается");
+    }
+
+    public List<Event> findAvailableEvents() {
+        List<Event> allEvents = eventRepository.findAll();
+        Map<Event, List<Request>> requestByEvents = findConfirmedRequestsMap(allEvents);
+
+        List<Event> availableEvents = new ArrayList<>();
+
+        requestByEvents.forEach((event, requests) -> {
+            if (event.getParticipantLimit() > requests.size()) availableEvents.add(event);
+                }
+        );
+
+        return availableEvents;
     }
 }

@@ -15,7 +15,6 @@ import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.CategoryMapper;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -55,7 +54,7 @@ public class CategoriesServiceImpl implements CategoriesService {
     public CategoryDto adminUpdateCategory(Long catId, CategoryDto requestDto) {
         Category checkCat = catRepository.findCategoryByName(requestDto.getName());
 
-        if (checkCat != null) {
+        if (checkCat != null && !checkCat.getId().equals(catId)) {
             throw new RequestNotProcessedException("Категория с данным названием существует");
         }
 

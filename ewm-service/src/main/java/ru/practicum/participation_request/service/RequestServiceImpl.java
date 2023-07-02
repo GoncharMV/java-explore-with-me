@@ -49,8 +49,10 @@ public class RequestServiceImpl implements RequestService {
 
         findEntity.checkEventInitiator(event, user);
 
+        Integer limit = event.getParticipantLimit();
+
         List<Request> requests = requestRepository.findRequestByIdIn(updateDto.getRequestIds());
-        List<Request> confRequests = new ArrayList<>();
+        List<Request> confRequests = findEntity.findConfirmedEventRequests(event);
         List<Request> rejRequests = new ArrayList<>();
 
         RequestStatus status = updateDto.getStatus();
@@ -65,13 +67,8 @@ public class RequestServiceImpl implements RequestService {
                 rejRequests.add(r);
             }
 
-            Integer limit = event.getParticipantLimit();
 
             if (status.equals(RequestStatus.CONFIRMED)) {
-                if (limit == 0) {
-                    r.setStatus(status);
-                    confRequests.add(r);
-                }
 
                 if (confRequests.size() < limit) {
                     r.setStatus(status);
@@ -99,16 +96,28 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public RequestDto participantAddRequest(Long userId, Long eventId) {
         User user = findEntity.findUserOrElseThrow(userId);
-        Event event = findEntity.findPublishedEventOrElseThrow(eventId);
+        Event event = findEntity.checkEventPublished(eventId);
 
         findEntity.checkRequestInitiator(event, user);
+        findEntity.checkRepeatedRequest(event, user);
+
 
         Request newRequest = Request.builder()
                 .requester(user)
                 .event(event)
                 .created(LocalDateTime.now())
-                .status(RequestStatus.PENDING)
                 .build();
+
+        if (event.getParticipantLimit() == 0) {
+            newRequest.setStatus(RequestStatus.CONFIRMED);
+        } else {
+            if (!event.getRequestModeration()) {
+                findEntity.checkIfLimitIsFull(event);
+                newRequest.setStatus(RequestStatus.CONFIRMED);
+            } else {
+                newRequest.setStatus(RequestStatus.PENDING);
+            }
+        }
 
         Request request = requestRepository.save(newRequest);
 

@@ -12,7 +12,6 @@ import ru.practicum.compilations.model.Compilation;
 import ru.practicum.compilations.repository.CompilationRepository;
 import ru.practicum.events.model.Event;
 import ru.practicum.participation_request.model.Request;
-import ru.practicum.users.model.User;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
 import ru.practicum.utils.mapper.CompilationMapper;
