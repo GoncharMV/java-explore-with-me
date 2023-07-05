@@ -8,6 +8,7 @@ import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.events.service.EventService;
 import ru.practicum.utils.ConstantUtil;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import java.util.List;
 public class EventPublicController {
 
     private final EventService eventService;
+    private final HttpServletRequest request;
 
     @GetMapping
     public List<EventOutputFullDto> findEvents(
@@ -34,13 +36,13 @@ public class EventPublicController {
             @RequestParam(name = "size", defaultValue = "10") int size) {
         log.info("События найдены");
         return eventService.findEvents(text, categories, paid, rangeStart,
-                rangeEnd, onlyAvailable, sort, from, size);
+                rangeEnd, onlyAvailable, sort, from, size, request.getRemoteAddr());
     }
 
     @GetMapping("/{id}")
     public EventOutputFullDto getEvent(@PathVariable Long id) {
         log.info("Событие найдено");
-        return eventService.getEvent(id);
+        return eventService.getEvent(id, request.getRemoteAddr());
     }
 
 }

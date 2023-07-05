@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.model.Category;
+import ru.practicum.client.StatClient;
+import ru.practicum.dto.HitsInputDto;
 import ru.practicum.events.dto.*;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.QEvent;
@@ -24,8 +26,7 @@ import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.EventMapper;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -35,6 +36,8 @@ public class EventServiceImpl implements EventService {
     private final FindEntityUtilService findEntity;
     private final EventRepository eventRepository;
     private final LocationService locationService;
+    private final StatClient client;
+    private final String app = "evm-service";
 
     @Override
     @Transactional
@@ -46,8 +49,9 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null) adminUpdateEventStatus(event, dto.getStateAction());
 
         Event updateEvent = updateEvent(event, dto);
+    //    Map<Long, Long> views = findEntity.getViews(updateEvent.getId());
 
-        return EventMapper.toOutputDto(updateEvent, getRequestList(event));
+        return EventMapper.toOutputDto(updateEvent, getRequestList(event), Map.of());
     }
 
     @Override
@@ -90,8 +94,9 @@ public class EventServiceImpl implements EventService {
                 .get();
 
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
+        Map<Long, Long> views = findEntity.getViews(events);
 
-        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events));
+        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events), views);
     }
 
     @Override
@@ -100,8 +105,8 @@ public class EventServiceImpl implements EventService {
         User initiator = findEntity.findUserOrElseThrow(userId);
 
         List<Event> events = eventRepository.findAllByInitiator(initiator, pageable);
-
-        return EventMapper.toEventShortList(events, findEntity.findConfirmedRequestsMap(events));
+        Map<Long, Long> views = findEntity.getViews(events);
+        return EventMapper.toEventShortList(events, findEntity.findConfirmedRequestsMap(events), views);
     }
 
     @Override
@@ -122,8 +127,9 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
 
         event = eventRepository.save(event);
+      //  Map<Long, Long> views = findEntity.getViews(event.getId());
 
-        return EventMapper.toOutputDto(event, List.of());
+        return EventMapper.toOutputDto(event, List.of(), Map.of());
     }
 
     @Override
@@ -131,8 +137,9 @@ public class EventServiceImpl implements EventService {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
         findEntity.checkEventInitiator(event, user);
+        Map<Long, Long> views = findEntity.getViews(event.getId());
 
-        return EventMapper.toOutputDto(event, getRequestList(event));
+        return EventMapper.toOutputDto(event, getRequestList(event), views);
     }
 
     @Override
@@ -150,14 +157,15 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null) userUpdateEventStatus(event, dto.getStateAction());
 
         Event updateEvent = updateEvent(event, dto);
+        Map<Long, Long> views = findEntity.getViews(updateEvent.getId());
 
-        return EventMapper.toOutputDto(updateEvent, getRequestList(updateEvent));
+        return EventMapper.toOutputDto(updateEvent, getRequestList(updateEvent), views);
     }
 
     @Override
     public List<EventOutputFullDto> findEvents(String text, List<Long> categories, Boolean paid,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
-                                               String sort, int from, int size) {
+                                               String sort, int from, int size, String ip) {
         EventQueryCriteria criteria = EventQueryCriteria.builder()
                 .text(text)
                 .categories(categories)
@@ -199,13 +207,22 @@ public class EventServiceImpl implements EventService {
         Pageable pageable = PageableUtil.pageManager(from, size, null);
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
 
-        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events));
+        events.forEach(event -> saveHit(event.getId(), ip));
+        Map<Long, Long> views = findEntity.getViews(events);
+
+        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events), views);
     }
 
     @Override
-    public EventOutputFullDto getEvent(Long id) {
+    public EventOutputFullDto getEvent(Long id, String ip) {
         Event event = findEntity.findPublishedEventOrThrow(id);
-        return EventMapper.toOutputDto(event, getRequestList(event));
+        saveHit(id, ip);
+        Map<Long, Long> views = findEntity.getViews(event.getId());
+        return EventMapper.toOutputDto(event, getRequestList(event), views);
+    }
+
+    private void saveHit(Long id, String ip) {
+        client.saveHit(new HitsInputDto(app, "/events/" + id, ip, LocalDateTime.now()));
     }
 
     private void adminUpdateEventStatus(Event event, StateAction stateAction) {
@@ -272,13 +289,7 @@ public class EventServiceImpl implements EventService {
         if (criteria.getCategories() != null) {
             conditions.add(QEvent.event.category.id.in(criteria.getCategories()));
         }
-/*
-        if (rangeStart != null && rangeEnd != null) {
-            if (rangeStart.isBefore(rangeEnd)) {
-                throw new BadRequestException("невалидная дата");
-            }
-        }
-*/
+
         LocalDateTime rangeStart;
 
         if (criteria.getRangeStart() == null) {

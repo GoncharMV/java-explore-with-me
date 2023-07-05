@@ -50,9 +50,6 @@ public class Event {
     @Column(name = "title")
     private String title;
 
-    @Column(name = "views")
-    private Long views;
-
     @ManyToOne
     @JoinColumn(name = "initiator_id")
     private User initiator;

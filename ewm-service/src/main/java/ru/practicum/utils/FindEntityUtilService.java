@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
+import ru.practicum.client.StatClient;
 import ru.practicum.compilations.model.Compilation;
 import ru.practicum.compilations.repository.CompilationRepository;
 import ru.practicum.events.model.Event;
@@ -21,10 +22,7 @@ import ru.practicum.utils.exception.ObjectNotFoundException;
 import ru.practicum.utils.exception.RequestNotProcessedException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -37,6 +35,8 @@ public class FindEntityUtilService {
     private final EventRepository eventRepository;
     private final RequestRepository requestRepository;
     private final CompilationRepository compilationRepository;
+
+    private final StatClient client;
 
     public User findUserOrElseThrow(Long userId) {
         return userRepository.findById(userId)
@@ -58,6 +58,20 @@ public class FindEntityUtilService {
                 .orElseThrow(() -> new ObjectNotFoundException("Мероприятие не найдено или недоступно"));
     }
 
+    public List<Event> findAvailableEvents() {
+        List<Event> allEvents = eventRepository.findAll();
+        Map<Event, List<Request>> requestByEvents = findConfirmedRequestsMap(allEvents);
+
+        List<Event> availableEvents = new ArrayList<>();
+
+        requestByEvents.forEach((event, requests) -> {
+                    if (event.getParticipantLimit() > requests.size()) availableEvents.add(event);
+                }
+        );
+
+        return availableEvents;
+    }
+
     public Event checkEventPublished(Long eventId) {
         return eventRepository.findByIdAndStateIs(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new RequestNotProcessedException("Мероприятие недоступно"));
@@ -74,23 +88,6 @@ public class FindEntityUtilService {
     public Request findRequestOrElseThrow(Long requestId) {
         return requestRepository.findById(requestId)
                 .orElseThrow(() -> new ObjectNotFoundException("Заявка на участие не найдена"));
-    }
-
-    public void checkRepeatedRequest(Event event, User requester) {
-        Request request = requestRepository.findByEventAndRequester(event, requester);
-
-        if (request != null) {
-            throw new RequestNotProcessedException("Заявка на участие уже подана");
-        }
-    }
-
-    public void checkIfLimitIsFull(Event event) {
-        List<Request> requests = findConfirmedEventRequests(event);
-
-        if (event.getParticipantLimit() != 0 && event.getParticipantLimit() == requests.size()) {
-            throw new RequestNotProcessedException("Лимит заявок исчерпан");
-        }
-
     }
 
     public List<Request> findConfirmedEventRequests(Event event) {
@@ -110,6 +107,30 @@ public class FindEntityUtilService {
     public Compilation findCompilationOrThrow(Long compId) {
         return compilationRepository.findById(compId)
                 .orElseThrow(() -> new ObjectNotFoundException("Подборка на участие не найдена"));
+    }
+
+    public Map<Long, Long> getViews(List<Event> events) {
+        return Map.of();
+    }
+
+    public Map<Long, Long> getViews(Long eventId) {
+        return Map.of();
+    }
+
+    public void checkRepeatedRequest(Event event, User requester) {
+        Request request = requestRepository.findByEventAndRequester(event, requester);
+
+        if (request != null) {
+            throw new RequestNotProcessedException("Заявка на участие уже подана");
+        }
+    }
+
+    public void checkIfLimitIsFull(Event event) {
+        List<Request> requests = findConfirmedEventRequests(event);
+
+        if (event.getParticipantLimit() != 0 && event.getParticipantLimit() == requests.size()) {
+            throw new RequestNotProcessedException("Лимит заявок исчерпан");
+        }
     }
 
     public void checkEventInitiator(Event event, User user) {
@@ -144,19 +165,5 @@ public class FindEntityUtilService {
 
     public void unsupportedStatus() {
         throw new RequestNotProcessedException("Статус не поддерживается");
-    }
-
-    public List<Event> findAvailableEvents() {
-        List<Event> allEvents = eventRepository.findAll();
-        Map<Event, List<Request>> requestByEvents = findConfirmedRequestsMap(allEvents);
-
-        List<Event> availableEvents = new ArrayList<>();
-
-        requestByEvents.forEach((event, requests) -> {
-            if (event.getParticipantLimit() > requests.size()) availableEvents.add(event);
-                }
-        );
-
-        return availableEvents;
     }
 }

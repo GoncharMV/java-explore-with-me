@@ -41,7 +41,9 @@ public class CompilationServiceImpl implements CompilationService {
         compilation.setEvents(events);
         compilation = compilationRepository.save(compilation);
 
-        return CompilationMapper.toCompilationDto(compilation, findEntity.findConfirmedRequestsMap(events));
+        Map<Long, Long> views = findEntity.getViews(events);
+
+        return CompilationMapper.toCompilationDto(compilation, findEntity.findConfirmedRequestsMap(events), views);
     }
 
     @Override
@@ -63,14 +65,15 @@ public class CompilationServiceImpl implements CompilationService {
             events = findEntity.findEventsByIds(requestDto.getEvents());
             comp.setEvents(events);
         }
-        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events));
+        Map<Long, Long> views = findEntity.getViews(events);
+        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events), views);
     }
 
     @Override
     public List<CompilationOutputDto> getCompilations(Boolean pinned, int from, int size) {
         Pageable pageable = PageableUtil.pageManager(from, size, null);
         List<Compilation> compilations;
-        Set<Event> events = new HashSet<>();
+        List<Event> events = new ArrayList<>();
 
         if (pinned != null) {
             compilations = compilationRepository.findAllByPinned(pinned, pageable);
@@ -80,14 +83,16 @@ public class CompilationServiceImpl implements CompilationService {
 
         compilations.forEach(compilation -> events.addAll(compilation.getEvents()));
         Map<Event, List<Request>> confRequest = findEntity.findConfirmedRequestsMap(new ArrayList<>(events));
+        Map<Long, Long> views = findEntity.getViews(events);
 
-        return CompilationMapper.toCompDtoList(compilations, confRequest);
+        return CompilationMapper.toCompDtoList(compilations, confRequest, views);
     }
 
     @Override
     public CompilationOutputDto getCompilation(Long compId) {
         Compilation comp = findEntity.findCompilationOrThrow(compId);
         List<Event> events = comp.getEvents();
-        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events));
+        Map<Long, Long> views = findEntity.getViews(events);
+        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events), views);
     }
 }
