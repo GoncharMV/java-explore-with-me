@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.HitsInputDto;
+import ru.practicum.dto.StatsConstantUtils;
 import ru.practicum.dto.StatsOutputDto;
 import ru.practicum.stat.service.StatisticService;
 
@@ -32,8 +33,8 @@ public class StatsController {
     @GetMapping("/stats")
     @ResponseStatus(HttpStatus.OK)
     public List<StatsOutputDto> viewStats(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+            @RequestParam @DateTimeFormat(pattern = StatsConstantUtils.DATA_FORMAT) LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = StatsConstantUtils.DATA_FORMAT) LocalDateTime end,
             @RequestParam(required = false) List<String> uris,
             @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("Статистика собрана");

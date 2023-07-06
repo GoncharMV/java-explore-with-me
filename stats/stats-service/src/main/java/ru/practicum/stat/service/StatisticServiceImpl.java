@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.HitsInputDto;
+import ru.practicum.dto.StatsConstantUtils;
 import ru.practicum.dto.StatsOutputDto;
 import ru.practicum.stat.repository.StatsRepository;
 import ru.practicum.stat.utils.DtoMapper;
@@ -22,7 +23,8 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     @Transactional
     public void saveHit(HitsInputDto requestBody) {
-        statsRepository.save(DtoMapper.toHit(requestBody));
+        statsRepository.save(DtoMapper.toHit(requestBody,
+                LocalDateTime.parse(requestBody.getTimestamp(), StatsConstantUtils.DATA_FORMATTER)));
     }
 
     @Override

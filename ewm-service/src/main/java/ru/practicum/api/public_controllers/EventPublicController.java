@@ -19,7 +19,7 @@ import java.util.List;
 public class EventPublicController {
 
     private final EventService eventService;
-    private final HttpServletRequest request;
+//    private final HttpServletRequest request;
 
     @GetMapping
     public List<EventOutputFullDto> findEvents(
@@ -33,16 +33,18 @@ public class EventPublicController {
             @RequestParam(name = "onlyAvailable", required = false) Boolean onlyAvailable,
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "from", defaultValue = "0") int from,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            HttpServletRequest request) {
         log.info("События найдены");
         return eventService.findEvents(text, categories, paid, rangeStart,
-                rangeEnd, onlyAvailable, sort, from, size, request.getRemoteAddr());
+                rangeEnd, onlyAvailable, sort, from, size, request);
     }
 
     @GetMapping("/{id}")
-    public EventOutputFullDto getEvent(@PathVariable Long id) {
+    public EventOutputFullDto getEvent(@PathVariable Long id,
+                                       HttpServletRequest request) {
         log.info("Событие найдено");
-        return eventService.getEvent(id, request.getRemoteAddr());
+        return eventService.getEvent(id, request);
     }
 
 }

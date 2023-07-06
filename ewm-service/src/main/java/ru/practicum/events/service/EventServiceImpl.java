@@ -7,8 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.model.Category;
-import ru.practicum.client.StatClient;
-import ru.practicum.dto.HitsInputDto;
 import ru.practicum.events.dto.*;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.QEvent;
@@ -19,12 +17,14 @@ import ru.practicum.participation_request.model.Request;
 import ru.practicum.users.model.User;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
+import ru.practicum.utils.StatsService;
 import ru.practicum.utils.enums.EventState;
 import ru.practicum.utils.enums.StateAction;
 import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.EventMapper;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -36,8 +36,8 @@ public class EventServiceImpl implements EventService {
     private final FindEntityUtilService findEntity;
     private final EventRepository eventRepository;
     private final LocationService locationService;
-    private final StatClient client;
-    private final String app = "evm-service";
+    private final StatsService statsService;
+
 
     @Override
     @Transactional
@@ -49,9 +49,9 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null) adminUpdateEventStatus(event, dto.getStateAction());
 
         Event updateEvent = updateEvent(event, dto);
-    //    Map<Long, Long> views = findEntity.getViews(updateEvent.getId());
+        Map<Long, Long> views = statsService.getViews(List.of(updateEvent));
 
-        return EventMapper.toOutputDto(updateEvent, getRequestList(event), Map.of());
+        return EventMapper.toOutputDto(updateEvent, getRequestList(event), views);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class EventServiceImpl implements EventService {
                 .get();
 
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
-        Map<Long, Long> views = findEntity.getViews(events);
+        Map<Long, Long> views = statsService.getViews(events);
 
         return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events), views);
     }
@@ -105,7 +105,7 @@ public class EventServiceImpl implements EventService {
         User initiator = findEntity.findUserOrElseThrow(userId);
 
         List<Event> events = eventRepository.findAllByInitiator(initiator, pageable);
-        Map<Long, Long> views = findEntity.getViews(events);
+        Map<Long, Long> views = statsService.getViews(events);
         return EventMapper.toEventShortList(events, findEntity.findConfirmedRequestsMap(events), views);
     }
 
@@ -127,9 +127,9 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
 
         event = eventRepository.save(event);
-      //  Map<Long, Long> views = findEntity.getViews(event.getId());
+        Map<Long, Long> views = statsService.getViews(List.of(event));
 
-        return EventMapper.toOutputDto(event, List.of(), Map.of());
+        return EventMapper.toOutputDto(event, List.of(), views);
     }
 
     @Override
@@ -137,8 +137,7 @@ public class EventServiceImpl implements EventService {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
         findEntity.checkEventInitiator(event, user);
-        Map<Long, Long> views = findEntity.getViews(event.getId());
-
+        Map<Long, Long> views = statsService.getViews(List.of(event));
         return EventMapper.toOutputDto(event, getRequestList(event), views);
     }
 
@@ -157,7 +156,7 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null) userUpdateEventStatus(event, dto.getStateAction());
 
         Event updateEvent = updateEvent(event, dto);
-        Map<Long, Long> views = findEntity.getViews(updateEvent.getId());
+        Map<Long, Long> views = statsService.getViews(List.of(updateEvent));
 
         return EventMapper.toOutputDto(updateEvent, getRequestList(updateEvent), views);
     }
@@ -165,7 +164,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventOutputFullDto> findEvents(String text, List<Long> categories, Boolean paid,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
-                                               String sort, int from, int size, String ip) {
+                                               String sort, int from, int size, HttpServletRequest request) {
         EventQueryCriteria criteria = EventQueryCriteria.builder()
                 .text(text)
                 .categories(categories)
@@ -207,22 +206,19 @@ public class EventServiceImpl implements EventService {
         Pageable pageable = PageableUtil.pageManager(from, size, null);
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
 
-        events.forEach(event -> saveHit(event.getId(), ip));
-        Map<Long, Long> views = findEntity.getViews(events);
+        statsService.addHit(request);
+        Map<Long, Long> views = statsService.getViews(events);
 
         return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events), views);
     }
 
     @Override
-    public EventOutputFullDto getEvent(Long id, String ip) {
+    public EventOutputFullDto getEvent(Long id, HttpServletRequest request) {
         Event event = findEntity.findPublishedEventOrThrow(id);
-        saveHit(id, ip);
-        Map<Long, Long> views = findEntity.getViews(event.getId());
-        return EventMapper.toOutputDto(event, getRequestList(event), views);
-    }
 
-    private void saveHit(Long id, String ip) {
-        client.saveHit(new HitsInputDto(app, "/events/" + id, ip, LocalDateTime.now()));
+        statsService.addHit(request);
+        Map<Long, Long> views = statsService.getViews(List.of(event));
+        return EventMapper.toOutputDto(event, getRequestList(event), views);
     }
 
     private void adminUpdateEventStatus(Event event, StateAction stateAction) {
@@ -305,4 +301,6 @@ public class EventServiceImpl implements EventService {
             conditions.add(QEvent.event.eventDate.before(rangeEnd));
         }
     }
+
+
 }

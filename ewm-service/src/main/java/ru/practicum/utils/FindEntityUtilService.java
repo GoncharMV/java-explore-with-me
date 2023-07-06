@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
-import ru.practicum.client.StatClient;
 import ru.practicum.compilations.model.Compilation;
 import ru.practicum.compilations.repository.CompilationRepository;
 import ru.practicum.events.model.Event;
@@ -24,7 +23,6 @@ import ru.practicum.utils.exception.RequestNotProcessedException;
 import java.time.LocalDateTime;
 import java.util.*;
 
-
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Transactional(readOnly = true)
@@ -35,8 +33,6 @@ public class FindEntityUtilService {
     private final EventRepository eventRepository;
     private final RequestRepository requestRepository;
     private final CompilationRepository compilationRepository;
-
-    private final StatClient client;
 
     public User findUserOrElseThrow(Long userId) {
         return userRepository.findById(userId)
@@ -107,14 +103,6 @@ public class FindEntityUtilService {
     public Compilation findCompilationOrThrow(Long compId) {
         return compilationRepository.findById(compId)
                 .orElseThrow(() -> new ObjectNotFoundException("Подборка на участие не найдена"));
-    }
-
-    public Map<Long, Long> getViews(List<Event> events) {
-        return Map.of();
-    }
-
-    public Map<Long, Long> getViews(Long eventId) {
-        return Map.of();
     }
 
     public void checkRepeatedRequest(Event event, User requester) {

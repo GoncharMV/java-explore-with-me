@@ -9,9 +9,9 @@ import ru.practicum.location.model.Location;
 import ru.practicum.participation_request.model.Request;
 import ru.practicum.users.model.User;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class EventMapper {
 
@@ -34,8 +34,7 @@ public final class EventMapper {
     }
 
     public static EventOutputFullDto toOutputDto(Event event,
-                                                 List<Request> confirmedRequests,
-                                                 Map<Long, Long> views) {
+                                                 List<Request> confirmedRequests, Map<Long, Long> views) {
         return EventOutputFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
@@ -56,8 +55,7 @@ public final class EventMapper {
     }
 
     private static EventShortDto toShortDto(Event event,
-                                            List<Request> confirmedRequests,
-                                            Map<Long, Long> views) {
+                                            List<Request> confirmedRequests,  Map<Long, Long> views) {
         return EventShortDto.builder()
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCatDto(event.getCategory()))
@@ -74,21 +72,22 @@ public final class EventMapper {
     public static List<EventShortDto> toEventShortList(List<Event> events,
                                                        Map<Event, List<Request>> confirmedRequests,
                                                        Map<Long, Long> views) {
-        List<EventShortDto> eventsDto = new ArrayList<>();
-        for (Event e : events) {
-            eventsDto.add(toShortDto(e, confirmedRequests.getOrDefault(e, List.of()), views));
-        }
-        return eventsDto;
+
+        return events.stream().map((event) ->
+            toShortDto(event,
+                    confirmedRequests.getOrDefault(event, List.of()),
+                    views))
+                .collect(Collectors.toList());
     }
 
     public static List<EventOutputFullDto> toEventFullDtoList(List<Event> events,
                                                               Map<Event, List<Request>> confirmedRequests,
                                                               Map<Long, Long> views) {
-        List<EventOutputFullDto> eventsDto = new ArrayList<>();
-        for (Event e : events) {
-            eventsDto.add(toOutputDto(e, confirmedRequests.getOrDefault(e, List.of()), views));
-        }
-        return eventsDto;
+        return events.stream().map((event) ->
+                        toOutputDto(event,
+                                confirmedRequests.getOrDefault(event, List.of()),
+                                views))
+                .collect(Collectors.toList());
     }
 
 

@@ -3,6 +3,7 @@ package ru.practicum.events.service;
 import ru.practicum.events.dto.*;
 import ru.practicum.utils.enums.EventState;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,7 +35,7 @@ public interface EventService {
                                         Boolean onlyAvailable,
                                         String sort,
                                         int from,
-                                        int size, String ip);
+                                        int size, HttpServletRequest request);
 
-    EventOutputFullDto getEvent(Long id, String ip);
+    EventOutputFullDto getEvent(Long id, HttpServletRequest request);
 }
