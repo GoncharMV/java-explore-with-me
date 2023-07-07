@@ -14,7 +14,7 @@ import ru.practicum.events.model.Event;
 import ru.practicum.participation_request.model.Request;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
-import ru.practicum.utils.StatsService;
+import ru.practicum.utils.stats.StatsService;
 import ru.practicum.utils.mapper.CompilationMapper;
 
 import java.util.*;

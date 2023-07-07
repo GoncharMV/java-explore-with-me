@@ -154,4 +154,17 @@ public class FindEntityUtilService {
     public void unsupportedStatus() {
         throw new RequestNotProcessedException("Статус не поддерживается");
     }
+
+    public void checkSearchRange(LocalDateTime start, LocalDateTime end) {
+        if (start != null && end != null) {
+            if (start.isAfter(end)) {
+                throw new BadRequestException("невалидная дата");
+            }
+        }
+    }
+
+    public void thrNoAccess() {
+        throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+    }
+
 }

@@ -34,7 +34,7 @@ public final class EventMapper {
     }
 
     public static EventOutputFullDto toOutputDto(Event event,
-                                                 List<Request> confirmedRequests, Map<Long, Long> views) {
+                                                 List<Request> confirmedRequests, Long views) {
         return EventOutputFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
@@ -50,12 +50,12 @@ public final class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState())
                 .title(event.getTitle())
-                .views(views.getOrDefault(event.getId(), 0L))
+                .views(views)
                 .build();
     }
 
     private static EventShortDto toShortDto(Event event,
-                                            List<Request> confirmedRequests,  Map<Long, Long> views) {
+                                            List<Request> confirmedRequests,  Long views) {
         return EventShortDto.builder()
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCatDto(event.getCategory()))
@@ -65,7 +65,7 @@ public final class EventMapper {
                 .initiator(UserMapper.toPublicUser(event.getInitiator()))
                 .paid(event.getPaid())
                 .title(event.getTitle())
-                .views(views.getOrDefault(event.getId(), 0L))
+                .views(views)
                 .build();
     }
 
@@ -76,7 +76,7 @@ public final class EventMapper {
         return events.stream().map((event) ->
             toShortDto(event,
                     confirmedRequests.getOrDefault(event, List.of()),
-                    views))
+                    views.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toList());
     }
 
@@ -86,7 +86,7 @@ public final class EventMapper {
         return events.stream().map((event) ->
                         toOutputDto(event,
                                 confirmedRequests.getOrDefault(event, List.of()),
-                                views))
+                                views.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toList());
     }
 

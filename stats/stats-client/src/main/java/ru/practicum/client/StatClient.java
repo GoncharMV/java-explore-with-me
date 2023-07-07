@@ -52,7 +52,7 @@ public class StatClient extends BaseClient {
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
 
         if (start == null || end == null || start.isAfter(end)) {
-            throw new IllegalArgumentException("Недопустимый временной промежуток.");
+            throw new IllegalArgumentException("Недопустимый временной промежуток");
         }
 
         StringBuilder uriBuilder = new StringBuilder("/stats?start={start}&end={end}");

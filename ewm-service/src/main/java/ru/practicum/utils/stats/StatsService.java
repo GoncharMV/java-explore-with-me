@@ -1,4 +1,4 @@
-package ru.practicum.utils;
+package ru.practicum.utils.stats;
 
 
 import ru.practicum.dto.StatsOutputDto;

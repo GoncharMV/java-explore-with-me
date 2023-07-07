@@ -17,11 +17,9 @@ import ru.practicum.participation_request.model.Request;
 import ru.practicum.users.model.User;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
-import ru.practicum.utils.StatsService;
+import ru.practicum.utils.stats.StatsService;
 import ru.practicum.utils.enums.EventState;
 import ru.practicum.utils.enums.StateAction;
-import ru.practicum.utils.exception.BadRequestException;
-import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.EventMapper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,9 +47,8 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null) adminUpdateEventStatus(event, dto.getStateAction());
 
         Event updateEvent = updateEvent(event, dto);
-        Map<Long, Long> views = statsService.getViews(List.of(updateEvent));
 
-        return EventMapper.toOutputDto(updateEvent, getRequestList(event), views);
+        return toFullDto(updateEvent);
     }
 
     @Override
@@ -82,21 +79,14 @@ public class EventServiceImpl implements EventService {
         }
 
         fillCommonCriteria(criteria, conditions);
-
-        if (rangeStart != null && rangeEnd != null) {
-            if (rangeStart.isAfter(rangeEnd)) {
-                throw new BadRequestException("невалидная дата");
-            }
-        }
-
+        findEntity.checkSearchRange(rangeStart, rangeEnd);
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
                 .get();
 
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
-        Map<Long, Long> views = statsService.getViews(events);
 
-        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events), views);
+        return toFullDtoList(events);
     }
 
     @Override
@@ -105,8 +95,8 @@ public class EventServiceImpl implements EventService {
         User initiator = findEntity.findUserOrElseThrow(userId);
 
         List<Event> events = eventRepository.findAllByInitiator(initiator, pageable);
-        Map<Long, Long> views = statsService.getViews(events);
-        return EventMapper.toEventShortList(events, findEntity.findConfirmedRequestsMap(events), views);
+
+        return toShortDtoList(events);
     }
 
     @Override
@@ -127,9 +117,8 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
 
         event = eventRepository.save(event);
-        Map<Long, Long> views = statsService.getViews(List.of(event));
 
-        return EventMapper.toOutputDto(event, List.of(), views);
+        return toFullDto(event);
     }
 
     @Override
@@ -137,8 +126,8 @@ public class EventServiceImpl implements EventService {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
         findEntity.checkEventInitiator(event, user);
-        Map<Long, Long> views = statsService.getViews(List.of(event));
-        return EventMapper.toOutputDto(event, getRequestList(event), views);
+
+        return toFullDto(event);
     }
 
     @Override
@@ -156,9 +145,8 @@ public class EventServiceImpl implements EventService {
         if (dto.getStateAction() != null) userUpdateEventStatus(event, dto.getStateAction());
 
         Event updateEvent = updateEvent(event, dto);
-        Map<Long, Long> views = statsService.getViews(List.of(updateEvent));
 
-        return EventMapper.toOutputDto(updateEvent, getRequestList(updateEvent), views);
+        return toFullDto(updateEvent);
     }
 
     @Override
@@ -192,12 +180,7 @@ public class EventServiceImpl implements EventService {
         }
 
         fillCommonCriteria(criteria, conditions);
-
-        if (rangeStart != null && rangeEnd != null) {
-            if (rangeStart.isAfter(rangeEnd)) {
-                throw new BadRequestException("невалидная дата");
-            }
-        }
+        findEntity.checkSearchRange(rangeStart, rangeEnd);
 
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
@@ -207,9 +190,8 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
 
         statsService.addHit(request);
-        Map<Long, Long> views = statsService.getViews(events);
 
-        return EventMapper.toEventFullDtoList(events, findEntity.findConfirmedRequestsMap(events), views);
+        return toFullDtoList(events);
     }
 
     @Override
@@ -217,21 +199,21 @@ public class EventServiceImpl implements EventService {
         Event event = findEntity.findPublishedEventOrThrow(id);
 
         statsService.addHit(request);
-        Map<Long, Long> views = statsService.getViews(List.of(event));
-        return EventMapper.toOutputDto(event, getRequestList(event), views);
+
+        return toFullDto(event);
     }
 
     private void adminUpdateEventStatus(Event event, StateAction stateAction) {
         switch (stateAction) {
             case REJECT_EVENT:
                 if (event.getState().equals(EventState.PUBLISHED)) {
-                    throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+                    findEntity.thrNoAccess();
                 }
                 event.setState(EventState.CANCELED);
                 break;
             case PUBLISH_EVENT:
                 if (event.getState().equals(EventState.PUBLISHED) || event.getState().equals(EventState.CANCELED)) {
-                    throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+                    findEntity.thrNoAccess();
                 }
                 event.setState(EventState.PUBLISHED);
                 break;
@@ -244,7 +226,7 @@ public class EventServiceImpl implements EventService {
         switch (stateAction) {
             case CANCEL_REVIEW:
                 if (event.getState().equals(EventState.PUBLISHED)) {
-                    throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+                    findEntity.thrNoAccess();
                 }
                 event.setState(EventState.CANCELED);
                 break;
@@ -277,10 +259,6 @@ public class EventServiceImpl implements EventService {
         return event;
     }
 
-    private List<Request> getRequestList(Event event) {
-        return findEntity.findConfirmedEventRequests(event);
-    }
-
     private void fillCommonCriteria(EventQueryCriteria criteria, List<BooleanExpression> conditions) {
         if (criteria.getCategories() != null) {
             conditions.add(QEvent.event.category.id.in(criteria.getCategories()));
@@ -302,5 +280,21 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    private List<EventOutputFullDto> toFullDtoList(List<Event> events) {
+        Map<Long, Long> views = statsService.getViews(events);
+        Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
 
+        return EventMapper.toEventFullDtoList(events, requests, views);
+    }
+
+    private List<EventShortDto> toShortDtoList(List<Event> events) {
+        Map<Long, Long> views = statsService.getViews(events);
+        Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
+
+        return EventMapper.toEventShortList(events, requests, views);
+    }
+
+    private EventOutputFullDto toFullDto(Event event) {
+        return toFullDtoList(List.of(event)).get(0);
+    }
 }
