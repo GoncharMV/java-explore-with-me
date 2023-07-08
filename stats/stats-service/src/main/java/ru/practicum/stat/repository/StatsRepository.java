@@ -13,21 +13,21 @@ import java.util.List;
 public interface StatsRepository extends JpaRepository<Hit, Long> {
 
     @Query("SELECT new ru.practicum.dto.StatsOutputDto(h.app, h.uri, COUNT(h.id)) " +
-            "FROM Hit h " +
+            "FROM Hit AS h " +
             "WHERE h.timestamp between ?1 AND ?2 " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY COUNT (h.ip) DESC ")
     List<StatsOutputDto> getAllStats(LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT new ru.practicum.dto.StatsOutputDto(h.app, h.uri, COUNT(DISTINCT h.ip)) " +
-            "FROM Hit h " +
+            "FROM Hit AS h " +
             "WHERE h.timestamp between ?1 AND ?2 " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY COUNT (DISTINCT h.ip) DESC ")
     List<StatsOutputDto> getAllStatsDistinctIp(LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT new ru.practicum.dto.StatsOutputDto(h.app, h.uri, COUNT(h.ip)) " +
-            "FROM Hit h " +
+            "FROM Hit AS h " +
             "WHERE h.timestamp between ?1 AND ?2 " +
             "AND h.uri IN (?3) " +
             "GROUP BY h.app, h.uri " +
@@ -35,7 +35,7 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
     List<StatsOutputDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris);
 
     @Query("SELECT new ru.practicum.dto.StatsOutputDto(h.app, h.uri, COUNT(DISTINCT h.ip)) " +
-            "FROM Hit h " +
+            "FROM Hit AS h " +
             "WHERE h.timestamp between ?1 AND ?2 " +
             "AND h.uri IN (?3) " +
             "GROUP BY h.app, h.uri " +

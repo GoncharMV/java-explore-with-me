@@ -216,6 +216,7 @@ public class EventServiceImpl implements EventService {
                     findEntity.thrNoAccess();
                 }
                 event.setState(EventState.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
                 break;
             default:
                 findEntity.unsupportedStatus();
