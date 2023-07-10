@@ -23,7 +23,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final FindEntityUtilService findEntity;
 
-
     @Override
     @Transactional
     public void adminRemoveUser(Long userId) {
@@ -34,8 +33,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto adminAddUser(UserDto requestDto) {
-        User checkUser = userRepository.findByEmail(requestDto.getEmail());
-        if (checkUser != null) throw new RequestNotProcessedException("Пользователь с таким именем существует");
+        findEntity.checkUserEmailExists(requestDto.getEmail());
+
         User user = userRepository.save(UserMapper.toUser(requestDto));
         return UserMapper.toUserDto(user);
     }

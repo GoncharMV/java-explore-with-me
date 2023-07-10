@@ -42,9 +42,13 @@ public class EventServiceImpl implements EventService {
     public EventOutputFullDto adminUpdateEvent(Long eventId, UpdateEventAdminRequest dto) {
         Event event = findEntity.findEventOrElseThrow(eventId);
 
-        if (dto.getEventDate() != null) findEntity.checkEventDate(dto.getEventDate());
+        if (dto.getEventDate() != null) {
+            findEntity.checkEventDate(dto.getEventDate());
+        }
 
-        if (dto.getStateAction() != null) adminUpdateEventStatus(event, dto.getStateAction());
+        if (dto.getStateAction() != null) {
+            adminUpdateEventStatus(event, dto.getStateAction());
+        }
 
         Event updateEvent = updateEvent(event, dto);
 
@@ -108,9 +112,15 @@ public class EventServiceImpl implements EventService {
 
         findEntity.checkEventDate(requestDto.getEventDate());
 
-        if (requestDto.getPaid() == null) requestDto.setPaid(false);
-        if (requestDto.getRequestModeration() == null) requestDto.setRequestModeration(true);
-        if (requestDto.getParticipantLimit() == null) requestDto.setParticipantLimit(0);
+        if (requestDto.getPaid() == null) {
+            requestDto.setPaid(false);
+        }
+        if (requestDto.getRequestModeration() == null) {
+            requestDto.setRequestModeration(true);
+        }
+        if (requestDto.getParticipantLimit() == null) {
+            requestDto.setParticipantLimit(0);
+        }
 
         Event event = EventMapper.toEvent(requestDto, initiator, cat, loc);
         event.setCreatedOn(LocalDateTime.now());
@@ -140,9 +150,13 @@ public class EventServiceImpl implements EventService {
         findEntity.checkEventInitiator(event, user);
         findEntity.checkUnpublishedEvent(event);
 
-        if (dto.getEventDate() != null) findEntity.checkEventDate(dto.getEventDate());
+        if (dto.getEventDate() != null) {
+            findEntity.checkEventDate(dto.getEventDate());
+        }
 
-        if (dto.getStateAction() != null) userUpdateEventStatus(event, dto.getStateAction());
+        if (dto.getStateAction() != null) {
+            userUpdateEventStatus(event, dto.getStateAction());
+        }
 
         Event updateEvent = updateEvent(event, dto);
 
@@ -172,7 +186,9 @@ public class EventServiceImpl implements EventService {
                     .or(QEvent.event.title.containsIgnoreCase(criteria.getText())));
         }
 
-        if (criteria.getPaid() != null) conditions.add(QEvent.event.paid.eq(criteria.getPaid()));
+        if (criteria.getPaid() != null) {
+            conditions.add(QEvent.event.paid.eq(criteria.getPaid()));
+        }
 
         if (criteria.getOnlyAvailable() != null && criteria.getOnlyAvailable()) {
             conditions.add(QEvent.event.participantLimit.eq(0)
@@ -212,7 +228,8 @@ public class EventServiceImpl implements EventService {
                 event.setState(EventState.CANCELED);
                 break;
             case PUBLISH_EVENT:
-                if (event.getState().equals(EventState.PUBLISHED) || event.getState().equals(EventState.CANCELED)) {
+                if (event.getState().equals(EventState.PUBLISHED)
+                        || event.getState().equals(EventState.CANCELED)) {
                     findEntity.thrNoAccess();
                 }
                 event.setState(EventState.PUBLISHED);
@@ -240,22 +257,39 @@ public class EventServiceImpl implements EventService {
     }
 
     private Event updateEvent(Event event, UpdateEventRequest dto) {
-        if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) event.setAnnotation(dto.getAnnotation());
+        if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
+            event.setAnnotation(dto.getAnnotation());
+        }
         if (dto.getCategory() != null) {
             Category cat = findEntity.findCategoryOrElseThrow(dto.getCategory());
             event.setCategory(cat);
         }
-        if (dto.getDescription() != null && !dto.getDescription().isBlank())
+
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
             event.setDescription(dto.getDescription());
-        if (dto.getEventDate() != null) event.setEventDate(dto.getEventDate());
+        }
+
+        if (dto.getEventDate() != null) {
+            event.setEventDate(dto.getEventDate());
+        }
+
         if (dto.getLocation() != null) {
             Location loc = locationService.getLocationOrElseSave(dto.getLocation());
             event.setLocation(loc);
         }
-        if (dto.getPaid() != null) event.setPaid(dto.getPaid());
-        if (dto.getParticipantLimit() != null) event.setParticipantLimit(dto.getParticipantLimit());
-        if (dto.getRequestModeration() != null) event.setRequestModeration(dto.getRequestModeration());
-        if (dto.getTitle() != null && !dto.getTitle().isBlank()) event.setTitle(dto.getTitle());
+        if (dto.getPaid() != null) {
+            event.setPaid(dto.getPaid());
+        }
+        if (dto.getParticipantLimit() != null) {
+            event.setParticipantLimit(dto.getParticipantLimit());
+        }
+        if (dto.getRequestModeration() != null) {
+            event.setRequestModeration(dto.getRequestModeration());
+        }
+
+        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
+            event.setTitle(dto.getTitle());
+        }
 
         return event;
     }

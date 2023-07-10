@@ -39,7 +39,7 @@ public class BaseClient {
         return prepareGatewayResponse(statsServerResponse);
     }
 
-    private HttpHeaders defaultHeaders() {
+    private static HttpHeaders defaultHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));

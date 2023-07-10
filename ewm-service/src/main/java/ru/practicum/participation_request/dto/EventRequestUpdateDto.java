@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 public class EventRequestUpdateDto {
 
-    List<Long> requestIds;
-    RequestStatus status;
+    private List<Long> requestIds;
+    private RequestStatus status;
 
 }

@@ -7,11 +7,17 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.events.service.EventService;
 import ru.practicum.utils.ConstantUtil;
+import ru.practicum.utils.exception.BadRequestException;
+import ru.practicum.utils.exception.ObjectNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * public API for work with events
+ * all inputs must be json type
+ */
 @RestController
 @RequestMapping(path = "/events")
 @Slf4j
@@ -19,8 +25,22 @@ import java.util.List;
 public class EventPublicController {
 
     private final EventService eventService;
-//    private final HttpServletRequest request;
 
+    /**
+     * public search for events with certain parameters
+     *
+     * @param text for search in title, description or annotation of events
+     * @param categories list of category ids in which the search is made
+     * @param paid = false - event is free of charge, paid = true - event costs money
+     * @param rangeStart start date from which the search is made
+     * @param rangeEnd end date
+     * @param onlyAvailable = true - events without participation limit or with available spots
+     * @param sort by view or by event's date
+     * @param from specifies the index of the first displayed element from the list (default = 0)
+     * @param size determines the number of elements to be displayed (default = 10)
+     * @return list of events with all available parameters, or empty list if nothing is found
+     * @throws BadRequestException if the start date is after the end date
+     */
     @GetMapping
     public List<EventOutputFullDto> findEvents(
             @RequestParam(name = "text", required = false) String text,
@@ -40,6 +60,13 @@ public class EventPublicController {
                 rangeEnd, onlyAvailable, sort, from, size, request);
     }
 
+    /**
+     *
+     * @param id event id
+     * @param request servlet request
+     * @return full info of specific event
+     * @throws ObjectNotFoundException if event is unpublished or does not exist
+     */
     @GetMapping("/{id}")
     public EventOutputFullDto getEvent(@PathVariable Long id,
                                        HttpServletRequest request) {

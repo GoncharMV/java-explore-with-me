@@ -36,22 +36,22 @@ public class FindEntityUtilService {
 
     public User findUserOrElseThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ObjectNotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> new ObjectNotFoundException(ConstantUtil.USER + ConstantUtil.NOT_FOUND));
     }
 
     public Category findCategoryOrElseThrow(Long catId) {
         return catRepository.findById(catId)
-                .orElseThrow(() -> new ObjectNotFoundException("Категория не найдена"));
+                .orElseThrow(() -> new ObjectNotFoundException(ConstantUtil.CAT + ConstantUtil.NOT_FOUND));
     }
 
     public Event findEventOrElseThrow(Long eventId) {
         return eventRepository.findById(eventId)
-                .orElseThrow(() -> new ObjectNotFoundException("Мероприятие не найдено"));
+                .orElseThrow(() -> new ObjectNotFoundException(ConstantUtil.EVENT + ConstantUtil.NOT_FOUND));
     }
 
     public Event findPublishedEventOrThrow(Long eventId) {
         return eventRepository.findByIdAndStateIs(eventId, EventState.PUBLISHED)
-                .orElseThrow(() -> new ObjectNotFoundException("Мероприятие не найдено или недоступно"));
+                .orElseThrow(() -> new ObjectNotFoundException(ConstantUtil.EVENT + ConstantUtil.NOT_AVAILABLE));
     }
 
     public List<Event> findAvailableEvents() {
@@ -70,7 +70,7 @@ public class FindEntityUtilService {
 
     public Event checkEventPublished(Long eventId) {
         return eventRepository.findByIdAndStateIs(eventId, EventState.PUBLISHED)
-                .orElseThrow(() -> new RequestNotProcessedException("Мероприятие недоступно"));
+                .orElseThrow(() -> new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.NOT_AVAILABLE));
     }
 
     public List<Event> findCategoryEvents(Category cat) {
@@ -83,7 +83,7 @@ public class FindEntityUtilService {
 
     public Request findRequestOrElseThrow(Long requestId) {
         return requestRepository.findById(requestId)
-                .orElseThrow(() -> new ObjectNotFoundException("Заявка на участие не найдена"));
+                .orElseThrow(() -> new ObjectNotFoundException(ConstantUtil.REQUEST + ConstantUtil.NOT_FOUND));
     }
 
     public List<Request> findConfirmedEventRequests(Event event) {
@@ -102,14 +102,14 @@ public class FindEntityUtilService {
 
     public Compilation findCompilationOrThrow(Long compId) {
         return compilationRepository.findById(compId)
-                .orElseThrow(() -> new ObjectNotFoundException("Подборка на участие не найдена"));
+                .orElseThrow(() -> new ObjectNotFoundException(ConstantUtil.COMP + ConstantUtil.NOT_FOUND));
     }
 
     public void checkRepeatedRequest(Event event, User requester) {
         Request request = requestRepository.findByEventAndRequester(event, requester);
 
         if (request != null) {
-            throw new RequestNotProcessedException("Заявка на участие уже подана");
+            throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.IS_EXISTS);
         }
     }
 
@@ -117,54 +117,75 @@ public class FindEntityUtilService {
         List<Request> requests = findConfirmedEventRequests(event);
 
         if (event.getParticipantLimit() != 0 && event.getParticipantLimit() == requests.size()) {
-            throw new RequestNotProcessedException("Лимит заявок исчерпан");
+            throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
         }
     }
 
     public void checkEventInitiator(Event event, User user) {
         if (!event.getInitiator().equals(user)) {
-            throw new RequestNotProcessedException("Доступ к функции есть только у создателя мероприятия");
+            throw new RequestNotProcessedException(ConstantUtil.USER + ConstantUtil.NO_ACCESS + ConstantUtil.EVENT);
         }
     }
 
     public void checkRequestInitiator(Event event, User user) {
         if (event.getInitiator().equals(user)) {
-            throw new RequestNotProcessedException("Создатель мероприятия не может подавать заявку на участие");
+            throw new RequestNotProcessedException(ConstantUtil.CREATOR_REQ);
         }
     }
 
     public void checkUnpublishedEvent(Event event) {
         if (event.getState().equals(EventState.PUBLISHED)) {
-            throw new RequestNotProcessedException("Редактировать можно толкьо неопубликованные события");
+            throw new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.IS_FINAL);
         }
     }
 
     public void checkRequestRequestor(Request request, User user) {
         if (!request.getRequester().equals(user)) {
-            throw new RequestNotProcessedException("Доступ к функции есть только у создателя заявки");
+            throw new RequestNotProcessedException(ConstantUtil.ONLY_CREATOR);
         }
     }
 
     public void checkEventDate(LocalDateTime eventDate) {
         if (eventDate.isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new BadRequestException("Невалидная дата события");
+            throw new BadRequestException(ConstantUtil.DATA + ConstantUtil.NOT_AVAILABLE);
         }
     }
 
     public void unsupportedStatus() {
-        throw new RequestNotProcessedException("Статус не поддерживается");
+        throw new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.STATUS + ConstantUtil.NOT_AVAILABLE);
     }
 
     public void checkSearchRange(LocalDateTime start, LocalDateTime end) {
-        if (start != null && end != null) {
-            if (start.isAfter(end)) {
-                throw new BadRequestException("невалидная дата");
-            }
+        if (start != null && end != null && start.isAfter(end)) {
+                throw new BadRequestException(ConstantUtil.DATA + ConstantUtil.NOT_AVAILABLE);
+        }
+    }
+
+    public void checkUserEmailExists(String email) {
+        User checkUser = userRepository.findByEmail(email);
+        if (checkUser != null) {
+            throw new RequestNotProcessedException(ConstantUtil.EMAIL_EXISTS);
+        }
+    }
+
+    public void checkCatName(String name, Long catId) {
+        Category checkCat = catRepository.findCategoryByName(name);
+
+        if (checkCat != null && !checkCat.getId().equals(catId)) {
+            throw new RequestNotProcessedException(ConstantUtil.CAT + ConstantUtil.IS_EXISTS);
+        }
+    }
+
+    public void checkCatName(String name) {
+        Category checkCat = catRepository.findCategoryByName(name);
+
+        if (checkCat != null) {
+            throw new RequestNotProcessedException(ConstantUtil.CAT + ConstantUtil.IS_EXISTS);
         }
     }
 
     public void thrNoAccess() {
-        throw new RequestNotProcessedException("Событие уже опубликовано или отменено");
+        throw new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.IS_FINAL);
     }
 
 }

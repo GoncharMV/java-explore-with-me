@@ -61,8 +61,14 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation comp = findEntity.findCompilationOrThrow(compId);
         List<Event> events = new ArrayList<>();
 
-        if (requestDto.getTitle() != null) comp.setTitle(requestDto.getTitle());
-        if (requestDto.getPinned() != null) comp.setPinned(requestDto.getPinned());
+        if (requestDto.getTitle() != null) {
+            comp.setTitle(requestDto.getTitle());
+        }
+
+        if (requestDto.getPinned() != null) {
+            comp.setPinned(requestDto.getPinned());
+        }
+
         if (requestDto.getEvents() != null) {
             events = findEntity.findEventsByIds(requestDto.getEvents());
             comp.setEvents(events);

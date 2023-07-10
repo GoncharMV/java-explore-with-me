@@ -1,8 +1,14 @@
 package ru.practicum.categories.dto;
 
+import lombok.*;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+@Builder
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CategoryInputDto {
 
     @NotBlank

@@ -11,6 +11,7 @@ import ru.practicum.participation_request.dto.RequestUpdateStatusResultDto;
 import ru.practicum.participation_request.model.Request;
 import ru.practicum.participation_request.repository.RequestRepository;
 import ru.practicum.users.model.User;
+import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.enums.RequestStatus;
 import ru.practicum.utils.exception.RequestNotProcessedException;
@@ -59,7 +60,8 @@ public class RequestServiceImpl implements RequestService {
 
         for (Request r : requests) {
             if (r.getStatus().equals(RequestStatus.CONFIRMED)) {
-                throw new RequestNotProcessedException("Невозможно изменить статус принятой заявки");
+                throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.STATUS
+                        + ConstantUtil.IS_FINAL);
             }
 
             if (status.equals(RequestStatus.REJECTED)) {
@@ -67,14 +69,15 @@ public class RequestServiceImpl implements RequestService {
                 rejRequests.add(r);
             }
 
-
             if (status.equals(RequestStatus.CONFIRMED)) {
 
                 if (confRequests.size() < limit) {
                     r.setStatus(status);
                     confRequests.add(r);
-                } else if (confRequests.size() == limit) {
-                    throw new RequestNotProcessedException("Лимит заявок исчерпан");
+                }
+
+                if (confRequests.size() == limit) {
+                    throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
                 }
             }
         }
@@ -134,7 +137,7 @@ public class RequestServiceImpl implements RequestService {
         if (!request.getStatus().equals(RequestStatus.CONFIRMED)) {
             request.setStatus(RequestStatus.CANCELED);
         } else {
-            throw new RequestNotProcessedException("Нельзя отменить принятую заявку");
+            throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.STATUS + ConstantUtil.IS_FINAL);
         }
 
         return RequestMapper.toRequestDto(request);

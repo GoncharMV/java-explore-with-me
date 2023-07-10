@@ -12,15 +12,15 @@ import javax.validation.constraints.NotBlank;
 public class HitsInputDto {
 
     @NotBlank
-    String app;
+    private String app;
 
     @NotBlank
-    String uri;
+    private String uri;
 
     @NotBlank
-    String ip;
+    private String ip;
 
     @NotBlank
-    String timestamp;
+    private String timestamp;
 
 }

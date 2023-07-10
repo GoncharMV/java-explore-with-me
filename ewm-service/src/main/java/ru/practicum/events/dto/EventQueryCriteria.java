@@ -1,7 +1,7 @@
 package ru.practicum.events.dto;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import org.springframework.jmx.export.annotation.ManagedNotifications;
 import ru.practicum.utils.enums.EventState;
 
 import java.time.LocalDateTime;
@@ -9,6 +9,8 @@ import java.util.List;
 
 @Builder
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class EventQueryCriteria {
 
     private List<Long> users;
