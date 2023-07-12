@@ -14,6 +14,7 @@ import ru.practicum.users.model.User;
 import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.enums.RequestStatus;
+import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.RequestMapper;
 
@@ -77,6 +78,7 @@ public class RequestServiceImpl implements RequestService {
                         } else {
                             throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
                         }
+                    default: throw new BadRequestException(ConstantUtil.STATUS + ConstantUtil.NOT_FOUND);
                 }
             }
         }
