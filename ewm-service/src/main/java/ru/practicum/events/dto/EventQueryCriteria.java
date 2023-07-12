@@ -1,7 +1,6 @@
 package ru.practicum.events.dto;
 
 import lombok.*;
-import org.springframework.jmx.export.annotation.ManagedNotifications;
 import ru.practicum.utils.enums.EventState;
 
 import java.time.LocalDateTime;

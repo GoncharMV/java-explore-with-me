@@ -10,7 +10,6 @@ import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
-import ru.practicum.utils.exception.RequestNotProcessedException;
 import ru.practicum.utils.mapper.UserMapper;
 
 import java.util.List;
