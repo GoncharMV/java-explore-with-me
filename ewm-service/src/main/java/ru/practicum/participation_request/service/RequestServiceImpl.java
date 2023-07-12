@@ -78,6 +78,7 @@ public class RequestServiceImpl implements RequestService {
                         } else {
                             throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
                         }
+                        break;
                     default: throw new BadRequestException(ConstantUtil.STATUS + ConstantUtil.NOT_FOUND);
                 }
             }
