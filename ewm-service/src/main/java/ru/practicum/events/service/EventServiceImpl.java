@@ -11,6 +11,7 @@ import ru.practicum.events.dto.*;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.QEvent;
 import ru.practicum.events.repository.EventRepository;
+import ru.practicum.location.dto.LocationDto;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.service.LocationService;
 import ru.practicum.participation_request.model.Request;
@@ -257,12 +258,11 @@ public class EventServiceImpl implements EventService {
     }
 
     private Event updateEvent(Event event, UpdateEventRequest dto) {
+        setCatIfNotNull(event, dto.getCategory());
+        setLocIfNotNull(event, dto.getLocation());
+
         if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
             event.setAnnotation(dto.getAnnotation());
-        }
-        if (dto.getCategory() != null) {
-            Category cat = findEntity.findCategoryOrElseThrow(dto.getCategory());
-            event.setCategory(cat);
         }
 
         if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
@@ -273,10 +273,6 @@ public class EventServiceImpl implements EventService {
             event.setEventDate(dto.getEventDate());
         }
 
-        if (dto.getLocation() != null) {
-            Location loc = locationService.getLocationOrElseSave(dto.getLocation());
-            event.setLocation(loc);
-        }
         if (dto.getPaid() != null) {
             event.setPaid(dto.getPaid());
         }
@@ -292,6 +288,20 @@ public class EventServiceImpl implements EventService {
         }
 
         return event;
+    }
+
+    private void setLocIfNotNull(Event event, LocationDto location) {
+        if (location != null) {
+            Location loc = locationService.getLocationOrElseSave(location);
+            event.setLocation(loc);
+        }
+    }
+
+    private void setCatIfNotNull(Event event, Long category) {
+        if (category != null) {
+            Category cat = findEntity.findCategoryOrElseThrow(category);
+            event.setCategory(cat);
+        }
     }
 
     private void fillCommonCriteria(EventQueryCriteria criteria, List<BooleanExpression> conditions) {
