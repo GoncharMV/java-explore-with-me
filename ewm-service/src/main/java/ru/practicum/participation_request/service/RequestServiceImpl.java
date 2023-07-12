@@ -62,22 +62,21 @@ public class RequestServiceImpl implements RequestService {
             if (r.getStatus().equals(RequestStatus.CONFIRMED)) {
                 throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.STATUS
                         + ConstantUtil.IS_FINAL);
-            }
-
-            if (status.equals(RequestStatus.REJECTED)) {
-                r.setStatus(status);
-                rejRequests.add(r);
-            }
-
-            if (status.equals(RequestStatus.CONFIRMED)) {
-
-                if (confRequests.size() < limit) {
-                    r.setStatus(status);
-                    confRequests.add(r);
-                }
-
-                if (confRequests.size() == limit) {
-                    throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
+            } else {
+                switch (status) {
+                    case REJECTED:
+                        r.setStatus(status);
+                        rejRequests.add(r);
+                        break;
+                    case CONFIRMED:
+                        if (confRequests.size() < limit) {
+                            r.setStatus(status);
+                            confRequests.add(r);
+                        } else if (confRequests.size() == limit) {
+                            throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
+                        } else {
+                            throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
+                        }
                 }
             }
         }
@@ -103,7 +102,6 @@ public class RequestServiceImpl implements RequestService {
 
         findEntity.checkRequestInitiator(event, user);
         findEntity.checkRepeatedRequest(event, user);
-
 
         Request newRequest = Request.builder()
                 .requester(user)
