@@ -217,7 +217,11 @@ public class FindEntityUtilService {
 
     public Long getAvgRating(Event event) {
         EventRatingDto rating = ratingService.getRating(event.getId());
-        return rating.getLikes() - rating.getDislikes();
+        if (rating.getDislikes() >= rating.getLikes()) {
+            return 0L;
+        } else {
+            return rating.getLikes() - rating.getDislikes();
+        }
     }
 
 }

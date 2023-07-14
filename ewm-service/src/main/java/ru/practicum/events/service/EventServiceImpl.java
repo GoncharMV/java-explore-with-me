@@ -137,6 +137,7 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
 
         event = eventRepository.save(event);
+        event.setRating(findEntity.getAvgRating(event));
 
         return toFullDto(event);
     }
@@ -211,7 +212,11 @@ public class EventServiceImpl implements EventService {
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
                 .get();
-        Pageable pageable = fillPageable(sort, from, size);
+
+        Pageable pageable = PageableUtil.pageManager(from, size, null);
+        if (sort != null) {
+            pageable = fillPageable(sort, from, size);
+        }
 
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
 
