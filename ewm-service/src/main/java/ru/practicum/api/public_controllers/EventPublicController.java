@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.events.service.EventService;
 import ru.practicum.utils.ConstantUtil;
+import ru.practicum.utils.enums.EventSort;
 import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.exception.ObjectNotFoundException;
 
@@ -51,7 +52,7 @@ public class EventPublicController {
             @RequestParam(name = "rangeEnd", required = false) @DateTimeFormat(pattern = ConstantUtil.DATA_FORMAT)
             LocalDateTime rangeEnd,
             @RequestParam(name = "onlyAvailable", required = false) Boolean onlyAvailable,
-            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "sort", required = false) EventSort sort,
             @RequestParam(name = "from", defaultValue = "0") int from,
             @RequestParam(name = "size", defaultValue = "10") int size,
             HttpServletRequest request) {

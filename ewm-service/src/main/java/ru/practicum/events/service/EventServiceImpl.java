@@ -18,8 +18,11 @@ import ru.practicum.participation_request.model.Request;
 import ru.practicum.rating.dto.EventRatingDto;
 import ru.practicum.rating.service.RatingService;
 import ru.practicum.users.model.User;
+import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
+import ru.practicum.utils.enums.EventSort;
+import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.stats.StatsService;
 import ru.practicum.utils.enums.EventState;
 import ru.practicum.utils.enums.StateAction;
@@ -170,7 +173,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventOutputFullDto> findEvents(String text, List<Long> categories, Boolean paid,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
-                                               String sort, int from, int size, HttpServletRequest request) {
+                                               EventSort sort, int from, int size, HttpServletRequest request) {
         EventQueryCriteria criteria = EventQueryCriteria.builder()
                 .text(text)
                 .categories(categories)
@@ -205,8 +208,8 @@ public class EventServiceImpl implements EventService {
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
                 .get();
+        Pageable pageable = fillPageable(sort, from, size);
 
-        Pageable pageable = PageableUtil.pageManager(from, size, null);
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
 
         statsService.addHit(request);
@@ -224,17 +227,40 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventOutputFullDto addRating(Long userId, Long eventId, Boolean isLike) {
-        findEntity.findUserOrElseThrow(userId);
+        User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
+
+        findEntity.checkIfInitiatorThrow(event, user);
+        findEntity.checkParticipation(event, user);
 
         if (isLike) {
             ratingService.addLike(userId, eventId);
         } else {
             ratingService.addDislike(userId, eventId);
         }
+        event.setRating(getAvgRating(event));
 
         return toFullDto(event);
+    }
+
+    private Pageable fillPageable(EventSort sort, int from, int size) {
+        Pageable pageable;
+        switch (sort) {
+            case VIEWS:
+                pageable = PageableUtil.pageManager(from, size, ConstantUtil.VIEWS);
+                break;
+            case EVENT_DATE:
+                pageable = PageableUtil.pageManager(from, size, ConstantUtil.EVENT_DATE);
+                break;
+            case RATING:
+                pageable = PageableUtil.pageManager(from, size, ConstantUtil.RATING_STR);
+                break;
+            default:
+                throw new BadRequestException(ConstantUtil.STATUS + ConstantUtil.NOT_AVAILABLE);
+        }
+        return pageable;
     }
 
     private void adminUpdateEventStatus(Event event, StateAction stateAction) {
@@ -344,6 +370,7 @@ public class EventServiceImpl implements EventService {
 
     private List<EventOutputFullDto> toFullDtoList(List<Event> events) {
         Map<Long, Long> views = statsService.getViews(events);
+        events.forEach(event -> event.setViews(views.getOrDefault(event.getId(), 0L)));
         Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
         Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
 
@@ -362,5 +389,9 @@ public class EventServiceImpl implements EventService {
         return toFullDtoList(List.of(event)).get(0);
     }
 
+    private Long getAvgRating(Event event) {
+        EventRatingDto rating = ratingService.getRating(event.getId());
+        return rating.getLikes() - rating.getDislikes();
+    }
 
 }

@@ -1,6 +1,7 @@
 package ru.practicum.events.service;
 
 import ru.practicum.events.dto.*;
+import ru.practicum.utils.enums.EventSort;
 import ru.practicum.utils.enums.EventState;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,7 +34,7 @@ public interface EventService {
                                         LocalDateTime rangeStart,
                                         LocalDateTime rangeEnd,
                                         Boolean onlyAvailable,
-                                        String sort,
+                                        EventSort sort,
                                         int from,
                                         int size, HttpServletRequest request);
 

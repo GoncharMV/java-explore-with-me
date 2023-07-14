@@ -8,7 +8,6 @@ import ru.practicum.rating.dto.EventRatingDto;
 import ru.practicum.rating.model.Rating;
 import ru.practicum.rating.repository.RatingRepository;
 import ru.practicum.utils.ConstantUtil;
-import ru.practicum.utils.FindEntityUtilService;
 
 import java.util.List;
 
@@ -21,6 +20,7 @@ public class RatingServiceImpl implements RatingService {
     private final RatingRepository ratingRepository;
 
     @Override
+    @Transactional
     public void addLike(Long userId, Long eventId) {
         Rating rating = Rating.builder()
                             .userId(userId)
@@ -32,6 +32,7 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
+    @Transactional
     public void addDislike(Long userId, Long eventId) {
         Rating rating = Rating.builder()
                             .userId(userId)

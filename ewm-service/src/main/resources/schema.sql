@@ -36,6 +36,8 @@ CREATE table IF NOT EXISTS events (
     request_moderation  BOOLEAN NOT NULL,
     state               VARCHAR(32),
     title               VARCHAR(120) NOT NULL,
+    views               BIGINT,
+    rating              BIGINT,
     CONSTRAINT event_pk PRIMARY KEY (event_id)
 );
 
@@ -57,7 +59,7 @@ CREATE TABLE IF NOT EXISTS participation_requests (
     created          TIMESTAMP without time zone,
     event_id         BIGINT REFERENCES events (event_id) ON DELETE CASCADE,
     requester_id     BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
-    status          VARCHAR(32),
+    status           VARCHAR(32),
     CONSTRAINT participation_request_pk PRIMARY KEY (request_id)
 );
 

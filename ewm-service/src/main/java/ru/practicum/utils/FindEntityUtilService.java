@@ -116,6 +116,14 @@ public class FindEntityUtilService {
         }
     }
 
+    public void checkParticipation(Event event, User user) {
+        Request request = requestRepository.findByEventAndRequester(event, user);
+
+        if (request == null) {
+            throw new RequestNotProcessedException(ConstantUtil.RATING + ConstantUtil.NOT_AVAILABLE);
+        }
+    }
+
     public void checkIfLimitIsFull(Event event) {
         List<Request> requests = findConfirmedEventRequests(event);
 
@@ -133,6 +141,12 @@ public class FindEntityUtilService {
     public void checkRequestInitiator(Event event, User user) {
         if (event.getInitiator().equals(user)) {
             throw new RequestNotProcessedException(ConstantUtil.CREATOR_REQ);
+        }
+    }
+
+    public void checkIfInitiatorThrow(Event event, User user) {
+        if (event.getInitiator().equals(user)) {
+            throw new RequestNotProcessedException(ConstantUtil.CREATOR_RATING);
         }
     }
 
