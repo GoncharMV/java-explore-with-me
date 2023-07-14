@@ -77,9 +77,9 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public List<CompilationOutputDto> getCompilations(Boolean pinned, int from, int size) {
-        Pageable pageable = PageableUtil.pageManager(from, size, null);
         List<Compilation> compilations;
         List<Event> events = new ArrayList<>();
+        Pageable pageable = PageableUtil.pageManager(from, size, "events");
 
         if (pinned != null) {
             compilations = compilationRepository.findAllByPinned(pinned, pageable);
