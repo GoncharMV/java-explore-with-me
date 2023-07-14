@@ -38,4 +38,6 @@ public interface EventService {
                                         int size, HttpServletRequest request);
 
     EventOutputFullDto getEvent(Long id, HttpServletRequest request);
+
+    EventOutputFullDto addRating(Long userId, Long eventId, Boolean isLike);
 }

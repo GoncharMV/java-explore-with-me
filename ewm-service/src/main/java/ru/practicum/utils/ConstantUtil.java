@@ -29,4 +29,7 @@ public final class ConstantUtil {
     public static final String REQ_LIMIT = " limit is reached ";
     public static final String CREATOR_REQ = "event creator cannot apply to participate";
 
+    public static final Integer LIKE = 1;
+    public static final Integer DISLIKE = -1;
+
 }

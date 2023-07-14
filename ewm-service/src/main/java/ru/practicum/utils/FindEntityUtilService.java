@@ -12,6 +12,8 @@ import ru.practicum.events.model.Event;
 import ru.practicum.events.repository.EventRepository;
 import ru.practicum.participation_request.model.Request;
 import ru.practicum.participation_request.repository.RequestRepository;
+import ru.practicum.rating.dto.EventRatingDto;
+import ru.practicum.rating.service.RatingService;
 import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
 import ru.practicum.utils.enums.EventState;
@@ -33,6 +35,7 @@ public class FindEntityUtilService {
     private final EventRepository eventRepository;
     private final RequestRepository requestRepository;
     private final CompilationRepository compilationRepository;
+    private final RatingService ratingService;
 
     public User findUserOrElseThrow(Long userId) {
         return userRepository.findById(userId)
@@ -186,6 +189,12 @@ public class FindEntityUtilService {
 
     public void thrNoAccess() {
         throw new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.IS_FINAL);
+    }
+
+    public Map<Event, EventRatingDto> findRatings(List<Event> events) {
+        Map<Event, EventRatingDto> ratings = new HashMap<>();
+        events.forEach(event -> ratings.put(event, ratingService.getRating(event.getId())));
+        return ratings;
     }
 
 }

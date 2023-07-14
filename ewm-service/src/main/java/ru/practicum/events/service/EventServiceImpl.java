@@ -15,6 +15,8 @@ import ru.practicum.location.dto.LocationDto;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.service.LocationService;
 import ru.practicum.participation_request.model.Request;
+import ru.practicum.rating.dto.EventRatingDto;
+import ru.practicum.rating.service.RatingService;
 import ru.practicum.users.model.User;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
@@ -36,6 +38,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final LocationService locationService;
     private final StatsService statsService;
+    private final RatingService ratingService;
 
 
     @Override
@@ -220,6 +223,20 @@ public class EventServiceImpl implements EventService {
         return toFullDto(event);
     }
 
+    @Override
+    public EventOutputFullDto addRating(Long userId, Long eventId, Boolean isLike) {
+        findEntity.findUserOrElseThrow(userId);
+        Event event = findEntity.findEventOrElseThrow(eventId);
+
+        if (isLike) {
+            ratingService.addLike(userId, eventId);
+        } else {
+            ratingService.addDislike(userId, eventId);
+        }
+
+        return toFullDto(event);
+    }
+
     private void adminUpdateEventStatus(Event event, StateAction stateAction) {
         switch (stateAction) {
             case REJECT_EVENT:
@@ -328,18 +345,22 @@ public class EventServiceImpl implements EventService {
     private List<EventOutputFullDto> toFullDtoList(List<Event> events) {
         Map<Long, Long> views = statsService.getViews(events);
         Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
 
-        return EventMapper.toEventFullDtoList(events, requests, views);
+        return EventMapper.toEventFullDtoList(events, requests, views, ratings);
     }
 
     private List<EventShortDto> toShortDtoList(List<Event> events) {
         Map<Long, Long> views = statsService.getViews(events);
         Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
 
-        return EventMapper.toEventShortList(events, requests, views);
+        return EventMapper.toEventShortList(events, requests, views, ratings);
     }
 
     private EventOutputFullDto toFullDto(Event event) {
         return toFullDtoList(List.of(event)).get(0);
     }
+
+
 }

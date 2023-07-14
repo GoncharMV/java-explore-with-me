@@ -12,6 +12,7 @@ import ru.practicum.compilations.model.Compilation;
 import ru.practicum.compilations.repository.CompilationRepository;
 import ru.practicum.events.model.Event;
 import ru.practicum.participation_request.model.Request;
+import ru.practicum.rating.dto.EventRatingDto;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
 import ru.practicum.utils.stats.StatsService;
@@ -44,8 +45,10 @@ public class CompilationServiceImpl implements CompilationService {
         compilation = compilationRepository.save(compilation);
 
         Map<Long, Long> views = statsService.getViews(events);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
 
-        return CompilationMapper.toCompilationDto(compilation, findEntity.findConfirmedRequestsMap(events), views);
+        return CompilationMapper.toCompilationDto(compilation, findEntity.findConfirmedRequestsMap(events),
+                views, ratings);
     }
 
     @Override
@@ -74,7 +77,8 @@ public class CompilationServiceImpl implements CompilationService {
             comp.setEvents(events);
         }
         Map<Long, Long> views = statsService.getViews(events);
-        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events), views);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
+        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events), views, ratings);
     }
 
     @Override
@@ -92,8 +96,9 @@ public class CompilationServiceImpl implements CompilationService {
         compilations.forEach(compilation -> events.addAll(compilation.getEvents()));
         Map<Event, List<Request>> confRequest = findEntity.findConfirmedRequestsMap(new ArrayList<>(events));
         Map<Long, Long> views = statsService.getViews(events);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
 
-        return CompilationMapper.toCompDtoList(compilations, confRequest, views);
+        return CompilationMapper.toCompDtoList(compilations, confRequest, views, ratings);
     }
 
     @Override
@@ -101,6 +106,7 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation comp = findEntity.findCompilationOrThrow(compId);
         List<Event> events = comp.getEvents();
         Map<Long, Long> views = statsService.getViews(events);
-        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events), views);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
+        return CompilationMapper.toCompilationDto(comp, findEntity.findConfirmedRequestsMap(events), views, ratings);
     }
 }

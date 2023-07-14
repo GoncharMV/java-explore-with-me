@@ -142,4 +142,18 @@ public class EventPrivateController {
         return requestService.initiatorChangeRequestStatus(userId, eventId, updateDto);
     }
 
+    @PostMapping("/{eventId}/like")
+    @ResponseStatus(HttpStatus.OK)
+    public EventOutputFullDto addLike(@PathVariable Long userId, @PathVariable Long eventId) {
+        log.info("Добавлен лайк мероприятию");
+        return eventService.addRating(userId, eventId, true);
+    }
+
+    @PostMapping("/{eventId}/dislike")
+    @ResponseStatus(HttpStatus.OK)
+    public EventOutputFullDto addDislike(@PathVariable Long userId, @PathVariable Long eventId) {
+        log.info("Добавлен дизлайк мероприятию");
+        return eventService.addRating(userId, eventId, false);
+    }
+
 }

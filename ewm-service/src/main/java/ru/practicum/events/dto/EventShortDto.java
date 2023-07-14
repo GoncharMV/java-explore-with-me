@@ -3,6 +3,7 @@ package ru.practicum.events.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.categories.dto.CategoryDto;
+import ru.practicum.rating.dto.EventRatingDto;
 import ru.practicum.users.dto.UserPublicDto;
 import ru.practicum.utils.ConstantUtil;
 
@@ -25,6 +26,6 @@ public class EventShortDto {
     private Boolean paid;
     private String title;
     private Long views;
-
+    private EventRatingDto rating;
 
 }

@@ -21,4 +21,5 @@ public class UserDto {
     @NotBlank
     @Size(min = 6, max = 254)
     private String email;
+    private Long rating;
 }
