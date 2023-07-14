@@ -1,6 +1,5 @@
 package ru.practicum.participation_request.service;
 
-import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.participation_request.dto.EventRequestUpdateDto;
 import ru.practicum.participation_request.dto.RequestDto;
 import ru.practicum.participation_request.dto.RequestUpdateStatusResultDto;

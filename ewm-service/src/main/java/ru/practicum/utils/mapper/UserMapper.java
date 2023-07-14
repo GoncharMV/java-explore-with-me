@@ -6,6 +6,7 @@ import ru.practicum.users.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class UserMapper {
 
@@ -20,25 +21,27 @@ public final class UserMapper {
                 .build();
     }
 
-    public static UserDto toUserDto(User user) {
+    public static UserDto toUserDto(User user, Long rating) {
         return UserDto.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .rating(rating)
                 .build();
     }
 
-    public static UserPublicDto toPublicUser(User user) {
+    public static UserPublicDto toPublicUser(User user, Long rating) {
         return UserPublicDto.builder()
                 .id(user.getId())
                 .name(user.getName())
+                .rating(rating)
                 .build();
     }
 
-    public static List<UserDto> toUserDtoList(List<User> users) {
+    public static List<UserDto> toUserDtoList(List<User> users, Map<User, Long> rating) {
         List<UserDto> usersDto = new ArrayList<>();
         for (User u : users) {
-            usersDto.add(toUserDto(u));
+            usersDto.add(toUserDto(u, rating.getOrDefault(u, 0L)));
         }
         return usersDto;
     }

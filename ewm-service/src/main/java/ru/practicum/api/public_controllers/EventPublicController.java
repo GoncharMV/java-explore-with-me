@@ -36,7 +36,7 @@ public class EventPublicController {
      * @param rangeStart start date from which the search is made
      * @param rangeEnd end date
      * @param onlyAvailable = true - events without participation limit or with available spots
-     * @param sort by view or by event's date
+     * @param sort by VIEW, EVENT_DATA or RATING
      * @param from specifies the index of the first displayed element from the list (default = 0)
      * @param size determines the number of elements to be displayed (default = 10)
      * @return list of events with all available parameters, or empty list if nothing is found

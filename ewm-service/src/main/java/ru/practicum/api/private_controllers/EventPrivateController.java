@@ -142,6 +142,14 @@ public class EventPrivateController {
         return requestService.initiatorChangeRequestStatus(userId, eventId, updateDto);
     }
 
+    /**
+     * add like to the event
+     *
+     * @param userId user id
+     * @param eventId event id
+     * @return event full parameters
+     * @throws RequestNotProcessedException if initiator or non-participant tries to leave the like
+     */
     @PostMapping("/{eventId}/like")
     @ResponseStatus(HttpStatus.OK)
     public EventOutputFullDto addLike(@PathVariable Long userId, @PathVariable Long eventId) {
@@ -149,6 +157,14 @@ public class EventPrivateController {
         return eventService.addRating(userId, eventId, true);
     }
 
+    /**
+     * add dislike to the event
+     *
+     * @param userId user id
+     * @param eventId event id
+     * @return event full parameters
+     * @throws RequestNotProcessedException if initiator or non-participant tries to leave the dislike
+     */
     @PostMapping("/{eventId}/dislike")
     @ResponseStatus(HttpStatus.OK)
     public EventOutputFullDto addDislike(@PathVariable Long userId, @PathVariable Long eventId) {

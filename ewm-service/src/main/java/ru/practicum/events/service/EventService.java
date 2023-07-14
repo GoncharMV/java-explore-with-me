@@ -1,6 +1,7 @@
 package ru.practicum.events.service;
 
 import ru.practicum.events.dto.*;
+import ru.practicum.events.model.Event;
 import ru.practicum.utils.enums.EventSort;
 import ru.practicum.utils.enums.EventState;
 
@@ -41,4 +42,6 @@ public interface EventService {
     EventOutputFullDto getEvent(Long id, HttpServletRequest request);
 
     EventOutputFullDto addRating(Long userId, Long eventId, Boolean isLike);
+
+    List<EventShortDto> toShortDtoList(List<Event> events);
 }

@@ -80,6 +80,10 @@ public class FindEntityUtilService {
         return eventRepository.findByCategory(cat);
     }
 
+    public List<Event> findUserEvents(User user) {
+        return eventRepository.findAllByInitiator(user);
+    }
+
     public List<Event> findEventsByIds(List<Long> ids) {
         return eventRepository.findByIdIn(ids);
     }
@@ -209,6 +213,11 @@ public class FindEntityUtilService {
         Map<Event, EventRatingDto> ratings = new HashMap<>();
         events.forEach(event -> ratings.put(event, ratingService.getRating(event.getId())));
         return ratings;
+    }
+
+    public Long getAvgRating(Event event) {
+        EventRatingDto rating = ratingService.getRating(event.getId());
+        return rating.getLikes() - rating.getDislikes();
     }
 
 }

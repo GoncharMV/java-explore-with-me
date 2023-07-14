@@ -9,4 +9,5 @@ public interface RatingService {
     void addDislike(Long userId, Long eventId);
 
     EventRatingDto getRating(Long eventId);
+
 }

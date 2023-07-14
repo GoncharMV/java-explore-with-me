@@ -8,6 +8,7 @@ import ru.practicum.events.model.Event;
 import ru.practicum.location.model.Location;
 import ru.practicum.participation_request.model.Request;
 import ru.practicum.rating.dto.EventRatingDto;
+import ru.practicum.users.dto.UserPublicDto;
 import ru.practicum.users.model.User;
 
 import java.util.List;
@@ -34,7 +35,7 @@ public final class EventMapper {
                 .build();
     }
 
-    public static EventOutputFullDto toOutputDto(Event event,
+    public static EventOutputFullDto toOutputDto(Event event, UserPublicDto user,
                                                  List<Request> confirmedRequests, Long views,
                                                  Map<Event, EventRatingDto> ratings) {
         return EventOutputFullDto.builder()
@@ -45,7 +46,7 @@ public final class EventMapper {
                 .createdOn(event.getCreatedOn())
                 .description(event.getDescription())
                 .eventDate(event.getEventDate())
-                .initiator(UserMapper.toPublicUser(event.getInitiator()))
+                .initiator(user)
                 .location(LocationMapper.toLocationDto(event.getLocation()))
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
@@ -57,7 +58,7 @@ public final class EventMapper {
                 .build();
     }
 
-    private static EventShortDto toShortDto(Event event,
+    private static EventShortDto toShortDto(Event event, UserPublicDto user,
                                             List<Request> confirmedRequests,  Long views,
                                             Map<Event, EventRatingDto> ratings) {
         return EventShortDto.builder()
@@ -66,7 +67,7 @@ public final class EventMapper {
                 .confirmedRequests(confirmedRequests.size())
                 .eventDate(event.getEventDate())
                 .id(event.getId())
-                .initiator(UserMapper.toPublicUser(event.getInitiator()))
+                .initiator(user)
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .views(views)
@@ -75,12 +76,14 @@ public final class EventMapper {
     }
 
     public static List<EventShortDto> toEventShortList(List<Event> events,
+                                                       Map<Event, UserPublicDto> users,
                                                        Map<Event, List<Request>> confirmedRequests,
                                                        Map<Long, Long> views,
                                                        Map<Event, EventRatingDto> ratings) {
 
         return events.stream().map((event) ->
             toShortDto(event,
+                    users.get(event),
                     confirmedRequests.getOrDefault(event, List.of()),
                     views.getOrDefault(event.getId(), 0L),
                     ratings))
@@ -88,11 +91,13 @@ public final class EventMapper {
     }
 
     public static List<EventOutputFullDto> toEventFullDtoList(List<Event> events,
+                                                              Map<Event, UserPublicDto> users,
                                                               Map<Event, List<Request>> confirmedRequests,
                                                               Map<Long, Long> views,
                                                               Map<Event, EventRatingDto> ratings) {
         return events.stream().map((event) ->
                         toOutputDto(event,
+                                users.get(event),
                                 confirmedRequests.getOrDefault(event, List.of()),
                                 views.getOrDefault(event.getId(), 0L),
                                 ratings))

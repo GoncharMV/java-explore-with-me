@@ -3,9 +3,7 @@ package ru.practicum.utils.mapper;
 import ru.practicum.compilations.dto.CompilationInputDto;
 import ru.practicum.compilations.dto.CompilationOutputDto;
 import ru.practicum.compilations.model.Compilation;
-import ru.practicum.events.model.Event;
-import ru.practicum.participation_request.model.Request;
-import ru.practicum.rating.dto.EventRatingDto;
+import ru.practicum.events.dto.EventShortDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,24 +22,20 @@ public final class CompilationMapper {
     }
 
     public static CompilationOutputDto toCompilationDto(Compilation compilation,
-                                                        Map<Event, List<Request>> confirmedRequests,
-                                                        Map<Long, Long> views,
-                                                        Map<Event, EventRatingDto> ratings) {
+                                                        List<EventShortDto> events) {
         return CompilationOutputDto.builder()
                 .id(compilation.getId())
                 .title(compilation.getTitle())
                 .pinned(compilation.getPinned())
-                .events(EventMapper.toEventShortList(compilation.getEvents(), confirmedRequests, views, ratings))
+                .events(events)
                 .build();
     }
 
     public static List<CompilationOutputDto> toCompDtoList(List<Compilation> comps,
-                                                           Map<Event, List<Request>> confirmedRequests,
-                                                           Map<Long, Long> views,
-                                                           Map<Event, EventRatingDto> ratings) {
+                                                           Map<Compilation, List<EventShortDto>> events) {
         List<CompilationOutputDto> compDto = new ArrayList<>();
         for (Compilation c : comps) {
-            compDto.add(toCompilationDto(c, confirmedRequests, views, ratings));
+            compDto.add(toCompilationDto(c, events.getOrDefault(c, List.of())));
         }
         return compDto;
     }
