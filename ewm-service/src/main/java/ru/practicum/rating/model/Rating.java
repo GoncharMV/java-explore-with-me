@@ -24,5 +24,6 @@ public class Rating {
     @Column(name = "event_id")
     private Long eventId;
 
-    private Integer rating;
+    @Column(name = "rating_sign")
+    private Integer ratingSign;
 }

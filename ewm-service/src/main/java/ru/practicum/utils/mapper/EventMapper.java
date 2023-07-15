@@ -81,7 +81,7 @@ public final class EventMapper {
                                                        Map<Long, Long> views,
                                                        Map<Event, EventRatingDto> ratings) {
 
-        return events.stream().map((event) ->
+        return events.stream().map(event ->
             toShortDto(event,
                     users.get(event),
                     confirmedRequests.getOrDefault(event, List.of()),
@@ -95,7 +95,7 @@ public final class EventMapper {
                                                               Map<Event, List<Request>> confirmedRequests,
                                                               Map<Long, Long> views,
                                                               Map<Event, EventRatingDto> ratings) {
-        return events.stream().map((event) ->
+        return events.stream().map(event ->
                         toOutputDto(event,
                                 users.get(event),
                                 confirmedRequests.getOrDefault(event, List.of()),

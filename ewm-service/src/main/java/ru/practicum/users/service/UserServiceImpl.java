@@ -10,6 +10,7 @@ import ru.practicum.users.dto.UserDto;
 import ru.practicum.users.dto.UserPublicDto;
 import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
+import ru.practicum.utils.CheckUtilService;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
 import ru.practicum.utils.mapper.UserMapper;
@@ -25,6 +26,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final FindEntityUtilService findEntity;
+    private final CheckUtilService checkEntity;
 
     @Override
     @Transactional
@@ -36,7 +38,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto adminAddUser(UserDto requestDto) {
-        findEntity.checkUserEmailExists(requestDto.getEmail());
+        checkEntity.checkUserEmailExists(requestDto.getEmail());
 
         User user = userRepository.save(UserMapper.toUser(requestDto));
         return UserMapper.toUserDto(user, findUserRating(user));

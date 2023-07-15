@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface EventService {
     EventOutputFullDto adminUpdateEvent(Long eventId,
-                                        UpdateEventAdminRequest requestDto);
+                                        UpdateEventRequest requestDto);
 
     List<EventOutputFullDto> adminFindEvents(List<Long> users,
                                              List<EventState> states,
@@ -27,7 +27,7 @@ public interface EventService {
 
     EventOutputFullDto initiatorGetEvent(Long userId, Long eventId);
 
-    EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventUserRequest requestDto);
+    EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventRequest requestDto);
 
     List<EventOutputFullDto> findEvents(String text,
                                         List<Long> categories,

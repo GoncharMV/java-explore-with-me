@@ -25,7 +25,7 @@ public class RatingServiceImpl implements RatingService {
         Rating rating = Rating.builder()
                             .userId(userId)
                             .eventId(eventId)
-                            .rating(ConstantUtil.LIKE)
+                            .ratingSign(ConstantUtil.LIKE)
                             .build();
 
         ratingRepository.save(rating);
@@ -37,7 +37,7 @@ public class RatingServiceImpl implements RatingService {
         Rating rating = Rating.builder()
                             .userId(userId)
                             .eventId(eventId)
-                            .rating(ConstantUtil.DISLIKE)
+                            .ratingSign(ConstantUtil.DISLIKE)
                             .build();
 
         ratingRepository.save(rating);
@@ -45,8 +45,8 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public EventRatingDto getRating(Long eventId) {
-        List<Rating> likes = ratingRepository.findAllByEventIdAndRating(eventId, ConstantUtil.LIKE);
-        List<Rating> dislikes = ratingRepository.findAllByEventIdAndRating(eventId, ConstantUtil.DISLIKE);
+        List<Rating> likes = ratingRepository.findAllByEventIdAndRatingSign(eventId, ConstantUtil.LIKE);
+        List<Rating> dislikes = ratingRepository.findAllByEventIdAndRatingSign(eventId, ConstantUtil.DISLIKE);
         return EventRatingDto.builder()
                 .likes((long) likes.size())
                 .dislikes((long) dislikes.size())

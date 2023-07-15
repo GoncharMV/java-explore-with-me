@@ -11,7 +11,6 @@ import ru.practicum.events.dto.*;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.QEvent;
 import ru.practicum.events.repository.EventRepository;
-import ru.practicum.location.dto.LocationDto;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.service.LocationService;
 import ru.practicum.participation_request.model.Request;
@@ -20,14 +19,12 @@ import ru.practicum.rating.service.RatingService;
 import ru.practicum.users.dto.UserPublicDto;
 import ru.practicum.users.model.User;
 import ru.practicum.users.service.UserService;
-import ru.practicum.utils.ConstantUtil;
+import ru.practicum.utils.CheckUtilService;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
 import ru.practicum.utils.enums.EventSort;
-import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.stats.StatsService;
 import ru.practicum.utils.enums.EventState;
-import ru.practicum.utils.enums.StateAction;
 import ru.practicum.utils.mapper.EventMapper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -45,22 +42,23 @@ public class EventServiceImpl implements EventService {
     private final StatsService statsService;
     private final RatingService ratingService;
     private final UserService userService;
-
+    private final EventServiceUtil eventUtil;
+    private final CheckUtilService checkEntity;
 
     @Override
     @Transactional
-    public EventOutputFullDto adminUpdateEvent(Long eventId, UpdateEventAdminRequest dto) {
+    public EventOutputFullDto adminUpdateEvent(Long eventId, UpdateEventRequest dto) {
         Event event = findEntity.findEventOrElseThrow(eventId);
 
         if (dto.getEventDate() != null) {
-            findEntity.checkEventDate(dto.getEventDate());
+            checkEntity.checkEventDate(dto.getEventDate());
         }
 
         if (dto.getStateAction() != null) {
-            adminUpdateEventStatus(event, dto.getStateAction());
+            eventUtil.adminUpdateEventStatus(event, dto.getStateAction());
         }
 
-        Event updateEvent = updateEvent(event, dto);
+        Event updateEvent = eventUtil.updateEvent(event, dto);
 
         return toFullDto(updateEvent);
     }
@@ -92,8 +90,8 @@ public class EventServiceImpl implements EventService {
             conditions.add(QEvent.event.state.in(List.of(EventState.values())));
         }
 
-        fillCommonCriteria(criteria, conditions);
-        findEntity.checkSearchRange(rangeStart, rangeEnd);
+        eventUtil.fillCommonCriteria(criteria, conditions);
+        checkEntity.checkSearchRange(rangeStart, rangeEnd);
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
                 .get();
@@ -120,7 +118,7 @@ public class EventServiceImpl implements EventService {
         Category cat = findEntity.findCategoryOrElseThrow(requestDto.getCategoryId());
         Location loc = locationService.getLocationOrElseSave(requestDto.getLocation());
 
-        findEntity.checkEventDate(requestDto.getEventDate());
+        checkEntity.checkEventDate(requestDto.getEventDate());
 
         if (requestDto.getPaid() == null) {
             requestDto.setPaid(false);
@@ -146,30 +144,30 @@ public class EventServiceImpl implements EventService {
     public EventOutputFullDto initiatorGetEvent(Long userId, Long eventId) {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
-        findEntity.checkEventInitiator(event, user);
+        checkEntity.checkEventInitiator(event, user);
 
         return toFullDto(event);
     }
 
     @Override
     @Transactional
-    public EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventUserRequest dto) {
+    public EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventRequest dto) {
 
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
 
-        findEntity.checkEventInitiator(event, user);
-        findEntity.checkUnpublishedEvent(event);
+        checkEntity.checkEventInitiator(event, user);
+        checkEntity.checkUnpublishedEvent(event);
 
         if (dto.getEventDate() != null) {
-            findEntity.checkEventDate(dto.getEventDate());
+            checkEntity.checkEventDate(dto.getEventDate());
         }
 
         if (dto.getStateAction() != null) {
-            userUpdateEventStatus(event, dto.getStateAction());
+            eventUtil.userUpdateEventStatus(event, dto.getStateAction());
         }
 
-        Event updateEvent = updateEvent(event, dto);
+        Event updateEvent = eventUtil.updateEvent(event, dto);
 
         return toFullDto(updateEvent);
     }
@@ -206,8 +204,8 @@ public class EventServiceImpl implements EventService {
                     .or(QEvent.event.participantLimit.loe(findEntity.findAvailableEvents().size())));
         }
 
-        fillCommonCriteria(criteria, conditions);
-        findEntity.checkSearchRange(rangeStart, rangeEnd);
+        eventUtil.fillCommonCriteria(criteria, conditions);
+        checkEntity.checkSearchRange(rangeStart, rangeEnd);
 
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
@@ -215,7 +213,7 @@ public class EventServiceImpl implements EventService {
 
         Pageable pageable = PageableUtil.pageManager(from, size, null);
         if (sort != null) {
-            pageable = fillPageable(sort, from, size);
+            pageable = eventUtil.fillPageable(sort, from, size);
         }
 
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
@@ -245,8 +243,8 @@ public class EventServiceImpl implements EventService {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
 
-        findEntity.checkIfInitiatorThrow(event, user);
-        findEntity.checkParticipation(event, user);
+        checkEntity.checkIfInitiatorThrow(event, user);
+        checkEntity.checkParticipation(event, user);
 
         if (isLike) {
             ratingService.addLike(userId, eventId);
@@ -256,139 +254,6 @@ public class EventServiceImpl implements EventService {
         event.setRating(findEntity.getAvgRating(event));
 
         return toFullDto(event);
-    }
-
-    private Pageable fillPageable(EventSort sort, int from, int size) {
-        Pageable pageable;
-        switch (sort) {
-            case VIEWS:
-                pageable = PageableUtil.pageManager(from, size, ConstantUtil.VIEWS);
-                break;
-            case EVENT_DATE:
-                pageable = PageableUtil.pageManager(from, size, ConstantUtil.EVENT_DATE);
-                break;
-            case RATING:
-                pageable = PageableUtil.pageManager(from, size, ConstantUtil.RATING_STR);
-                break;
-            default:
-                throw new BadRequestException(ConstantUtil.STATUS + ConstantUtil.NOT_AVAILABLE);
-        }
-        return pageable;
-    }
-
-    private void adminUpdateEventStatus(Event event, StateAction stateAction) {
-        switch (stateAction) {
-            case REJECT_EVENT:
-                if (event.getState().equals(EventState.PUBLISHED)) {
-                    findEntity.thrNoAccess();
-                }
-                event.setState(EventState.CANCELED);
-                break;
-            case PUBLISH_EVENT:
-                if (event.getState().equals(EventState.PUBLISHED)
-                        || event.getState().equals(EventState.CANCELED)) {
-                    findEntity.thrNoAccess();
-                }
-                event.setState(EventState.PUBLISHED);
-                event.setPublishedOn(LocalDateTime.now());
-                break;
-            default:
-                findEntity.unsupportedStatus();
-        }
-    }
-
-    private void userUpdateEventStatus(Event event, StateAction stateAction) {
-        switch (stateAction) {
-            case CANCEL_REVIEW:
-                if (event.getState().equals(EventState.PUBLISHED)) {
-                    findEntity.thrNoAccess();
-                }
-                event.setState(EventState.CANCELED);
-                break;
-            case SEND_TO_REVIEW:
-                event.setState(EventState.PENDING);
-                break;
-            default:
-                findEntity.unsupportedStatus();
-        }
-    }
-
-    private Event updateEvent(Event event, UpdateEventRequest dto) {
-        setCatIfNotNull(event, dto.getCategory());
-        setLocIfNotNull(event, dto.getLocation());
-
-        if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
-            event.setAnnotation(dto.getAnnotation());
-        }
-
-        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
-            event.setDescription(dto.getDescription());
-        }
-
-        if (dto.getEventDate() != null) {
-            event.setEventDate(dto.getEventDate());
-        }
-
-        if (dto.getPaid() != null) {
-            event.setPaid(dto.getPaid());
-        }
-        if (dto.getParticipantLimit() != null) {
-            event.setParticipantLimit(dto.getParticipantLimit());
-        }
-        if (dto.getRequestModeration() != null) {
-            event.setRequestModeration(dto.getRequestModeration());
-        }
-
-        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
-            event.setTitle(dto.getTitle());
-        }
-
-        return event;
-    }
-
-    private void setLocIfNotNull(Event event, LocationDto location) {
-        if (location != null) {
-            Location loc = locationService.getLocationOrElseSave(location);
-            event.setLocation(loc);
-        }
-    }
-
-    private void setCatIfNotNull(Event event, Long category) {
-        if (category != null) {
-            Category cat = findEntity.findCategoryOrElseThrow(category);
-            event.setCategory(cat);
-        }
-    }
-
-    private void fillCommonCriteria(EventQueryCriteria criteria, List<BooleanExpression> conditions) {
-        if (criteria.getCategories() != null) {
-            conditions.add(QEvent.event.category.id.in(criteria.getCategories()));
-        }
-
-        LocalDateTime rangeStart;
-
-        if (criteria.getRangeStart() == null) {
-            rangeStart = LocalDateTime.now();
-        } else {
-            rangeStart = criteria.getRangeStart();
-        }
-
-        conditions.add(QEvent.event.eventDate.after(rangeStart));
-
-        if (criteria.getRangeEnd() != null) {
-            LocalDateTime rangeEnd = criteria.getRangeEnd();
-            conditions.add(QEvent.event.eventDate.before(rangeEnd));
-        }
-    }
-
-    private List<EventOutputFullDto> toFullDtoList(List<Event> events) {
-        Map<Long, Long> views = statsService.getViews(events);
-        events.forEach(event -> event.setViews(views.getOrDefault(event.getId(), 0L)));
-        Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
-        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
-        Map<Event, UserPublicDto> users = userService.findUsersEvents(events);
-
-        return EventMapper.toEventFullDtoList(events, users, requests, views, ratings);
     }
 
     @Override
@@ -403,5 +268,15 @@ public class EventServiceImpl implements EventService {
 
     private EventOutputFullDto toFullDto(Event event) {
         return toFullDtoList(List.of(event)).get(0);
+    }
+
+    private List<EventOutputFullDto> toFullDtoList(List<Event> events) {
+        Map<Long, Long> views = statsService.getViews(events);
+        events.forEach(event -> event.setViews(views.getOrDefault(event.getId(), 0L)));
+        Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
+        Map<Event, UserPublicDto> users = userService.findUsersEvents(events);
+
+        return EventMapper.toEventFullDtoList(events, users, requests, views, ratings);
     }
 }

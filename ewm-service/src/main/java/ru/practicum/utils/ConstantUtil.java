@@ -4,9 +4,6 @@ import java.time.format.DateTimeFormatter;
 
 public final class ConstantUtil {
 
-    private ConstantUtil() {
-    }
-
     public static final String DATA_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final DateTimeFormatter DATA_FORMATTER = DateTimeFormatter.ofPattern(DATA_FORMAT);
 
@@ -37,4 +34,7 @@ public final class ConstantUtil {
     public static final String VIEWS = "views";
     public static final String EVENT_DATE = "eventDate";
     public static final String RATING_STR = "rating";
+
+    private ConstantUtil() {
+    }
 }

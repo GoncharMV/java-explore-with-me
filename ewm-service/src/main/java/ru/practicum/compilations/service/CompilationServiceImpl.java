@@ -89,7 +89,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         Map<Compilation, List<EventShortDto>> compEvents = new HashMap<>();
 
-        compilations.forEach(compilation -> {
+        compilations.forEach((Compilation compilation) -> {
             events.addAll(compilation.getEvents());
             compEvents.put(compilation, eventService.toShortDtoList(events));
         });

@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface RatingRepository extends JpaRepository<Rating, Long> {
 
-    List<Rating> findAllByEventIdAndRating(Long eventId, Integer rating);
+    List<Rating> findAllByEventIdAndRatingSign(Long eventId, Integer ratingSign);
 
 }

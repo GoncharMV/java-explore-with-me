@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.events.dto.EventInputDto;
-import ru.practicum.events.dto.EventOutputFullDto;
-import ru.practicum.events.dto.EventShortDto;
-import ru.practicum.events.dto.UpdateEventUserRequest;
+import ru.practicum.events.dto.*;
 import ru.practicum.events.service.EventService;
 import ru.practicum.participation_request.dto.EventRequestUpdateDto;
 import ru.practicum.participation_request.dto.RequestDto;
@@ -98,7 +95,7 @@ public class EventPrivateController {
     @ResponseStatus(HttpStatus.OK)
     public EventOutputFullDto initiatorUpdateEvent(@PathVariable Long userId,
                                                    @PathVariable Long eventId,
-                                                   @RequestBody @Valid UpdateEventUserRequest requestDto) {
+                                                   @RequestBody @Valid UpdateEventRequest requestDto) {
         log.info("Событие обновлено");
         return eventService.initiatorUpdateEvent(userId, eventId, requestDto);
     }

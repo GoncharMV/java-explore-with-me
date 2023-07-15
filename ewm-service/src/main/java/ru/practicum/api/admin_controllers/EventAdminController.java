@@ -6,7 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.events.dto.EventOutputFullDto;
-import ru.practicum.events.dto.UpdateEventAdminRequest;
+import ru.practicum.events.dto.UpdateEventRequest;
 import ru.practicum.events.service.EventService;
 import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.enums.EventState;
@@ -71,7 +71,7 @@ public class EventAdminController {
     @PatchMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventOutputFullDto adminUpdateEvent(@PathVariable Long eventId,
-                                               @RequestBody @Valid UpdateEventAdminRequest requestDto) {
+                                               @RequestBody @Valid UpdateEventRequest requestDto) {
         log.info("Событие отредактировано");
         return eventService.adminUpdateEvent(eventId, requestDto);
     }
