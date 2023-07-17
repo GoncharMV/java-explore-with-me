@@ -13,14 +13,13 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class UpdateEventRequest {
+public class UpdateEventRequest {
 
     @Size(min = 20, max = 2000)
     private String annotation;
     private Long category;
     @Size(min = 20, max = 7000)
     private String description;
-
     @JsonFormat(pattern = ConstantUtil.DATA_FORMAT)
     private LocalDateTime eventDate;
     private LocationDto location;

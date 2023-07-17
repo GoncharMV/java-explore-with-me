@@ -9,6 +9,7 @@ import ru.practicum.categories.dto.CategoryDto;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
 import ru.practicum.events.model.Event;
+import ru.practicum.utils.CheckUtilService;
 import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
@@ -24,12 +25,13 @@ public class CategoriesServiceImpl implements CategoriesService {
 
     private final CategoriesRepository catRepository;
     private final FindEntityUtilService findEntity;
+    private final CheckUtilService checkEntity;
 
     @Override
     @Transactional
     public CategoryDto adminAddCategory(CategoryDto requestDto) {
 
-        findEntity.checkCatName(requestDto.getName());
+        checkEntity.checkCatName(requestDto.getName());
 
         Category cat = catRepository.save(CategoryMapper.toCat(requestDto));
         return CategoryMapper.toCatDto(cat);
@@ -51,7 +53,7 @@ public class CategoriesServiceImpl implements CategoriesService {
     @Override
     @Transactional
     public CategoryDto adminUpdateCategory(Long catId, CategoryDto requestDto) {
-        findEntity.checkCatName(requestDto.getName(), catId);
+        checkEntity.checkCatName(requestDto.getName(), catId);
 
         Category cat = findEntity.findCategoryOrElseThrow(catId);
         cat.setName(requestDto.getName());

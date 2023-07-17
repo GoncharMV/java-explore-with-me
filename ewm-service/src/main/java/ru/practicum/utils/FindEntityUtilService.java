@@ -12,15 +12,15 @@ import ru.practicum.events.model.Event;
 import ru.practicum.events.repository.EventRepository;
 import ru.practicum.participation_request.model.Request;
 import ru.practicum.participation_request.repository.RequestRepository;
+import ru.practicum.rating.dto.EventRatingDto;
+import ru.practicum.rating.service.RatingService;
 import ru.practicum.users.model.User;
 import ru.practicum.users.repository.UserRepository;
 import ru.practicum.utils.enums.EventState;
 import ru.practicum.utils.enums.RequestStatus;
-import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.exception.ObjectNotFoundException;
 import ru.practicum.utils.exception.RequestNotProcessedException;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -33,6 +33,7 @@ public class FindEntityUtilService {
     private final EventRepository eventRepository;
     private final RequestRepository requestRepository;
     private final CompilationRepository compilationRepository;
+    private final RatingService ratingService;
 
     public User findUserOrElseThrow(Long userId) {
         return userRepository.findById(userId)
@@ -77,6 +78,10 @@ public class FindEntityUtilService {
         return eventRepository.findByCategory(cat);
     }
 
+    public List<Event> findUserEvents(User user) {
+        return eventRepository.findAllByInitiator(user);
+    }
+
     public List<Event> findEventsByIds(List<Long> ids) {
         return eventRepository.findByIdIn(ids);
     }
@@ -105,87 +110,19 @@ public class FindEntityUtilService {
                 .orElseThrow(() -> new ObjectNotFoundException(ConstantUtil.COMP + ConstantUtil.NOT_FOUND));
     }
 
-    public void checkRepeatedRequest(Event event, User requester) {
-        Request request = requestRepository.findByEventAndRequester(event, requester);
+    public Map<Event, EventRatingDto> findRatings(List<Event> events) {
+        Map<Event, EventRatingDto> ratings = new HashMap<>();
+        events.forEach(event -> ratings.put(event, ratingService.getRating(event.getId())));
+        return ratings;
+    }
 
-        if (request != null) {
-            throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.IS_EXISTS);
+    public Long getAvgRating(Event event) {
+        EventRatingDto rating = ratingService.getRating(event.getId());
+        if (rating.getDislikes() >= rating.getLikes()) {
+            return 0L;
+        } else {
+            return rating.getLikes() - rating.getDislikes();
         }
-    }
-
-    public void checkIfLimitIsFull(Event event) {
-        List<Request> requests = findConfirmedEventRequests(event);
-
-        if (event.getParticipantLimit() != 0 && event.getParticipantLimit() == requests.size()) {
-            throw new RequestNotProcessedException(ConstantUtil.REQUEST + ConstantUtil.REQ_LIMIT);
-        }
-    }
-
-    public void checkEventInitiator(Event event, User user) {
-        if (!event.getInitiator().equals(user)) {
-            throw new RequestNotProcessedException(ConstantUtil.USER + ConstantUtil.NO_ACCESS + ConstantUtil.EVENT);
-        }
-    }
-
-    public void checkRequestInitiator(Event event, User user) {
-        if (event.getInitiator().equals(user)) {
-            throw new RequestNotProcessedException(ConstantUtil.CREATOR_REQ);
-        }
-    }
-
-    public void checkUnpublishedEvent(Event event) {
-        if (event.getState().equals(EventState.PUBLISHED)) {
-            throw new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.IS_FINAL);
-        }
-    }
-
-    public void checkRequestRequestor(Request request, User user) {
-        if (!request.getRequester().equals(user)) {
-            throw new RequestNotProcessedException(ConstantUtil.ONLY_CREATOR);
-        }
-    }
-
-    public void checkEventDate(LocalDateTime eventDate) {
-        if (eventDate.isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new BadRequestException(ConstantUtil.DATA + ConstantUtil.NOT_AVAILABLE);
-        }
-    }
-
-    public void unsupportedStatus() {
-        throw new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.STATUS + ConstantUtil.NOT_AVAILABLE);
-    }
-
-    public void checkSearchRange(LocalDateTime start, LocalDateTime end) {
-        if (start != null && end != null && start.isAfter(end)) {
-                throw new BadRequestException(ConstantUtil.DATA + ConstantUtil.NOT_AVAILABLE);
-        }
-    }
-
-    public void checkUserEmailExists(String email) {
-        User checkUser = userRepository.findByEmail(email);
-        if (checkUser != null) {
-            throw new RequestNotProcessedException(ConstantUtil.EMAIL_EXISTS);
-        }
-    }
-
-    public void checkCatName(String name, Long catId) {
-        Category checkCat = catRepository.findCategoryByName(name);
-
-        if (checkCat != null && !checkCat.getId().equals(catId)) {
-            throw new RequestNotProcessedException(ConstantUtil.CAT + ConstantUtil.IS_EXISTS);
-        }
-    }
-
-    public void checkCatName(String name) {
-        Category checkCat = catRepository.findCategoryByName(name);
-
-        if (checkCat != null) {
-            throw new RequestNotProcessedException(ConstantUtil.CAT + ConstantUtil.IS_EXISTS);
-        }
-    }
-
-    public void thrNoAccess() {
-        throw new RequestNotProcessedException(ConstantUtil.EVENT + ConstantUtil.IS_FINAL);
     }
 
 }

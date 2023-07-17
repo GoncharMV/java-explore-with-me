@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.events.dto.EventOutputFullDto;
 import ru.practicum.events.service.EventService;
 import ru.practicum.utils.ConstantUtil;
+import ru.practicum.utils.enums.EventSort;
 import ru.practicum.utils.exception.BadRequestException;
 import ru.practicum.utils.exception.ObjectNotFoundException;
 
@@ -35,7 +36,7 @@ public class EventPublicController {
      * @param rangeStart start date from which the search is made
      * @param rangeEnd end date
      * @param onlyAvailable = true - events without participation limit or with available spots
-     * @param sort by view or by event's date
+     * @param sort by VIEW, EVENT_DATA or RATING
      * @param from specifies the index of the first displayed element from the list (default = 0)
      * @param size determines the number of elements to be displayed (default = 10)
      * @return list of events with all available parameters, or empty list if nothing is found
@@ -51,7 +52,7 @@ public class EventPublicController {
             @RequestParam(name = "rangeEnd", required = false) @DateTimeFormat(pattern = ConstantUtil.DATA_FORMAT)
             LocalDateTime rangeEnd,
             @RequestParam(name = "onlyAvailable", required = false) Boolean onlyAvailable,
-            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "sort", required = false) EventSort sort,
             @RequestParam(name = "from", defaultValue = "0") int from,
             @RequestParam(name = "size", defaultValue = "10") int size,
             HttpServletRequest request) {

@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.events.dto.EventInputDto;
-import ru.practicum.events.dto.EventOutputFullDto;
-import ru.practicum.events.dto.EventShortDto;
-import ru.practicum.events.dto.UpdateEventUserRequest;
+import ru.practicum.events.dto.*;
 import ru.practicum.events.service.EventService;
 import ru.practicum.participation_request.dto.EventRequestUpdateDto;
 import ru.practicum.participation_request.dto.RequestDto;
@@ -98,7 +95,7 @@ public class EventPrivateController {
     @ResponseStatus(HttpStatus.OK)
     public EventOutputFullDto initiatorUpdateEvent(@PathVariable Long userId,
                                                    @PathVariable Long eventId,
-                                                   @RequestBody @Valid UpdateEventUserRequest requestDto) {
+                                                   @RequestBody @Valid UpdateEventRequest requestDto) {
         log.info("Событие обновлено");
         return eventService.initiatorUpdateEvent(userId, eventId, requestDto);
     }
@@ -140,6 +137,36 @@ public class EventPrivateController {
             @RequestBody EventRequestUpdateDto updateDto) {
         log.info("Статус заявок изменён");
         return requestService.initiatorChangeRequestStatus(userId, eventId, updateDto);
+    }
+
+    /**
+     * add like to the event
+     *
+     * @param userId user id
+     * @param eventId event id
+     * @return event full parameters
+     * @throws RequestNotProcessedException if initiator or non-participant tries to leave the like
+     */
+    @PostMapping("/{eventId}/like")
+    @ResponseStatus(HttpStatus.OK)
+    public EventOutputFullDto addLike(@PathVariable Long userId, @PathVariable Long eventId) {
+        log.info("Добавлен лайк мероприятию");
+        return eventService.addRating(userId, eventId, true);
+    }
+
+    /**
+     * add dislike to the event
+     *
+     * @param userId user id
+     * @param eventId event id
+     * @return event full parameters
+     * @throws RequestNotProcessedException if initiator or non-participant tries to leave the dislike
+     */
+    @PostMapping("/{eventId}/dislike")
+    @ResponseStatus(HttpStatus.OK)
+    public EventOutputFullDto addDislike(@PathVariable Long userId, @PathVariable Long eventId) {
+        log.info("Добавлен дизлайк мероприятию");
+        return eventService.addRating(userId, eventId, false);
     }
 
 }

@@ -1,6 +1,8 @@
 package ru.practicum.events.service;
 
 import ru.practicum.events.dto.*;
+import ru.practicum.events.model.Event;
+import ru.practicum.utils.enums.EventSort;
 import ru.practicum.utils.enums.EventState;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,7 +11,7 @@ import java.util.List;
 
 public interface EventService {
     EventOutputFullDto adminUpdateEvent(Long eventId,
-                                        UpdateEventAdminRequest requestDto);
+                                        UpdateEventRequest requestDto);
 
     List<EventOutputFullDto> adminFindEvents(List<Long> users,
                                              List<EventState> states,
@@ -25,7 +27,7 @@ public interface EventService {
 
     EventOutputFullDto initiatorGetEvent(Long userId, Long eventId);
 
-    EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventUserRequest requestDto);
+    EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventRequest requestDto);
 
     List<EventOutputFullDto> findEvents(String text,
                                         List<Long> categories,
@@ -33,9 +35,13 @@ public interface EventService {
                                         LocalDateTime rangeStart,
                                         LocalDateTime rangeEnd,
                                         Boolean onlyAvailable,
-                                        String sort,
+                                        EventSort sort,
                                         int from,
                                         int size, HttpServletRequest request);
 
     EventOutputFullDto getEvent(Long id, HttpServletRequest request);
+
+    EventOutputFullDto addRating(Long userId, Long eventId, Boolean isLike);
+
+    List<EventShortDto> toShortDtoList(List<Event> events);
 }

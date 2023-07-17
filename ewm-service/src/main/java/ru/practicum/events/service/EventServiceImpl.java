@@ -11,16 +11,20 @@ import ru.practicum.events.dto.*;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.QEvent;
 import ru.practicum.events.repository.EventRepository;
-import ru.practicum.location.dto.LocationDto;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.service.LocationService;
 import ru.practicum.participation_request.model.Request;
+import ru.practicum.rating.dto.EventRatingDto;
+import ru.practicum.rating.service.RatingService;
+import ru.practicum.users.dto.UserPublicDto;
 import ru.practicum.users.model.User;
+import ru.practicum.users.service.UserService;
+import ru.practicum.utils.CheckUtilService;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.PageableUtil;
+import ru.practicum.utils.enums.EventSort;
 import ru.practicum.utils.stats.StatsService;
 import ru.practicum.utils.enums.EventState;
-import ru.practicum.utils.enums.StateAction;
 import ru.practicum.utils.mapper.EventMapper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,22 +40,25 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final LocationService locationService;
     private final StatsService statsService;
-
+    private final RatingService ratingService;
+    private final UserService userService;
+    private final EventServiceUtil eventUtil;
+    private final CheckUtilService checkEntity;
 
     @Override
     @Transactional
-    public EventOutputFullDto adminUpdateEvent(Long eventId, UpdateEventAdminRequest dto) {
+    public EventOutputFullDto adminUpdateEvent(Long eventId, UpdateEventRequest dto) {
         Event event = findEntity.findEventOrElseThrow(eventId);
 
         if (dto.getEventDate() != null) {
-            findEntity.checkEventDate(dto.getEventDate());
+            checkEntity.checkEventDate(dto.getEventDate());
         }
 
         if (dto.getStateAction() != null) {
-            adminUpdateEventStatus(event, dto.getStateAction());
+            eventUtil.adminUpdateEventStatus(event, dto.getStateAction());
         }
 
-        Event updateEvent = updateEvent(event, dto);
+        Event updateEvent = eventUtil.updateEvent(event, dto);
 
         return toFullDto(updateEvent);
     }
@@ -83,8 +90,8 @@ public class EventServiceImpl implements EventService {
             conditions.add(QEvent.event.state.in(List.of(EventState.values())));
         }
 
-        fillCommonCriteria(criteria, conditions);
-        findEntity.checkSearchRange(rangeStart, rangeEnd);
+        eventUtil.fillCommonCriteria(criteria, conditions);
+        checkEntity.checkSearchRange(rangeStart, rangeEnd);
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
                 .get();
@@ -111,7 +118,7 @@ public class EventServiceImpl implements EventService {
         Category cat = findEntity.findCategoryOrElseThrow(requestDto.getCategoryId());
         Location loc = locationService.getLocationOrElseSave(requestDto.getLocation());
 
-        findEntity.checkEventDate(requestDto.getEventDate());
+        checkEntity.checkEventDate(requestDto.getEventDate());
 
         if (requestDto.getPaid() == null) {
             requestDto.setPaid(false);
@@ -128,6 +135,7 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
 
         event = eventRepository.save(event);
+        event.setRating(findEntity.getAvgRating(event));
 
         return toFullDto(event);
     }
@@ -136,30 +144,30 @@ public class EventServiceImpl implements EventService {
     public EventOutputFullDto initiatorGetEvent(Long userId, Long eventId) {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
-        findEntity.checkEventInitiator(event, user);
+        checkEntity.checkEventInitiator(event, user);
 
         return toFullDto(event);
     }
 
     @Override
     @Transactional
-    public EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventUserRequest dto) {
+    public EventOutputFullDto initiatorUpdateEvent(Long userId, Long eventId, UpdateEventRequest dto) {
 
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
 
-        findEntity.checkEventInitiator(event, user);
-        findEntity.checkUnpublishedEvent(event);
+        checkEntity.checkEventInitiator(event, user);
+        checkEntity.checkUnpublishedEvent(event);
 
         if (dto.getEventDate() != null) {
-            findEntity.checkEventDate(dto.getEventDate());
+            checkEntity.checkEventDate(dto.getEventDate());
         }
 
         if (dto.getStateAction() != null) {
-            userUpdateEventStatus(event, dto.getStateAction());
+            eventUtil.userUpdateEventStatus(event, dto.getStateAction());
         }
 
-        Event updateEvent = updateEvent(event, dto);
+        Event updateEvent = eventUtil.updateEvent(event, dto);
 
         return toFullDto(updateEvent);
     }
@@ -167,7 +175,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventOutputFullDto> findEvents(String text, List<Long> categories, Boolean paid,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
-                                               String sort, int from, int size, HttpServletRequest request) {
+                                               EventSort sort, int from, int size, HttpServletRequest request) {
         EventQueryCriteria criteria = EventQueryCriteria.builder()
                 .text(text)
                 .categories(categories)
@@ -196,14 +204,18 @@ public class EventServiceImpl implements EventService {
                     .or(QEvent.event.participantLimit.loe(findEntity.findAvailableEvents().size())));
         }
 
-        fillCommonCriteria(criteria, conditions);
-        findEntity.checkSearchRange(rangeStart, rangeEnd);
+        eventUtil.fillCommonCriteria(criteria, conditions);
+        checkEntity.checkSearchRange(rangeStart, rangeEnd);
 
         BooleanExpression finalCond = conditions.stream()
                 .reduce(BooleanExpression::and)
                 .get();
 
         Pageable pageable = PageableUtil.pageManager(from, size, null);
+        if (sort != null) {
+            pageable = eventUtil.fillPageable(sort, from, size);
+        }
+
         List<Event> events = eventRepository.findAll(finalCond, pageable).getContent();
 
         statsService.addHit(request);
@@ -220,126 +232,51 @@ public class EventServiceImpl implements EventService {
         return toFullDto(event);
     }
 
-    private void adminUpdateEventStatus(Event event, StateAction stateAction) {
-        switch (stateAction) {
-            case REJECT_EVENT:
-                if (event.getState().equals(EventState.PUBLISHED)) {
-                    findEntity.thrNoAccess();
-                }
-                event.setState(EventState.CANCELED);
-                break;
-            case PUBLISH_EVENT:
-                if (event.getState().equals(EventState.PUBLISHED)
-                        || event.getState().equals(EventState.CANCELED)) {
-                    findEntity.thrNoAccess();
-                }
-                event.setState(EventState.PUBLISHED);
-                event.setPublishedOn(LocalDateTime.now());
-                break;
-            default:
-                findEntity.unsupportedStatus();
-        }
-    }
+    /**
+     * method for adding rating to the event. Average rating calculates as a subtraction dislikes from likes
+     *
+     * @param isLike = true, set like; isLike = false, set dislike
+     */
+    @Override
+    @Transactional
+    public EventOutputFullDto addRating(Long userId, Long eventId, Boolean isLike) {
+        User user = findEntity.findUserOrElseThrow(userId);
+        Event event = findEntity.findEventOrElseThrow(eventId);
 
-    private void userUpdateEventStatus(Event event, StateAction stateAction) {
-        switch (stateAction) {
-            case CANCEL_REVIEW:
-                if (event.getState().equals(EventState.PUBLISHED)) {
-                    findEntity.thrNoAccess();
-                }
-                event.setState(EventState.CANCELED);
-                break;
-            case SEND_TO_REVIEW:
-                event.setState(EventState.PENDING);
-                break;
-            default:
-                findEntity.unsupportedStatus();
-        }
-    }
+        checkEntity.checkIfInitiatorThrow(event, user);
+        checkEntity.checkParticipation(event, user);
 
-    private Event updateEvent(Event event, UpdateEventRequest dto) {
-        setCatIfNotNull(event, dto.getCategory());
-        setLocIfNotNull(event, dto.getLocation());
-
-        if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
-            event.setAnnotation(dto.getAnnotation());
-        }
-
-        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
-            event.setDescription(dto.getDescription());
-        }
-
-        if (dto.getEventDate() != null) {
-            event.setEventDate(dto.getEventDate());
-        }
-
-        if (dto.getPaid() != null) {
-            event.setPaid(dto.getPaid());
-        }
-        if (dto.getParticipantLimit() != null) {
-            event.setParticipantLimit(dto.getParticipantLimit());
-        }
-        if (dto.getRequestModeration() != null) {
-            event.setRequestModeration(dto.getRequestModeration());
-        }
-
-        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
-            event.setTitle(dto.getTitle());
-        }
-
-        return event;
-    }
-
-    private void setLocIfNotNull(Event event, LocationDto location) {
-        if (location != null) {
-            Location loc = locationService.getLocationOrElseSave(location);
-            event.setLocation(loc);
-        }
-    }
-
-    private void setCatIfNotNull(Event event, Long category) {
-        if (category != null) {
-            Category cat = findEntity.findCategoryOrElseThrow(category);
-            event.setCategory(cat);
-        }
-    }
-
-    private void fillCommonCriteria(EventQueryCriteria criteria, List<BooleanExpression> conditions) {
-        if (criteria.getCategories() != null) {
-            conditions.add(QEvent.event.category.id.in(criteria.getCategories()));
-        }
-
-        LocalDateTime rangeStart;
-
-        if (criteria.getRangeStart() == null) {
-            rangeStart = LocalDateTime.now();
+        if (isLike) {
+            ratingService.addLike(userId, eventId);
         } else {
-            rangeStart = criteria.getRangeStart();
+            ratingService.addDislike(userId, eventId);
         }
+        event.setRating(findEntity.getAvgRating(event));
 
-        conditions.add(QEvent.event.eventDate.after(rangeStart));
-
-        if (criteria.getRangeEnd() != null) {
-            LocalDateTime rangeEnd = criteria.getRangeEnd();
-            conditions.add(QEvent.event.eventDate.before(rangeEnd));
-        }
+        return toFullDto(event);
     }
 
-    private List<EventOutputFullDto> toFullDtoList(List<Event> events) {
+    @Override
+    public List<EventShortDto> toShortDtoList(List<Event> events) {
         Map<Long, Long> views = statsService.getViews(events);
         Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
+        Map<Event, UserPublicDto> users = userService.findUsersEvents(events);
 
-        return EventMapper.toEventFullDtoList(events, requests, views);
-    }
-
-    private List<EventShortDto> toShortDtoList(List<Event> events) {
-        Map<Long, Long> views = statsService.getViews(events);
-        Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
-
-        return EventMapper.toEventShortList(events, requests, views);
+        return EventMapper.toEventShortList(events, users, requests, views, ratings);
     }
 
     private EventOutputFullDto toFullDto(Event event) {
         return toFullDtoList(List.of(event)).get(0);
+    }
+
+    private List<EventOutputFullDto> toFullDtoList(List<Event> events) {
+        Map<Long, Long> views = statsService.getViews(events);
+        events.forEach(event -> event.setViews(views.getOrDefault(event.getId(), 0L)));
+        Map<Event, List<Request>> requests = findEntity.findConfirmedRequestsMap(events);
+        Map<Event, EventRatingDto> ratings = findEntity.findRatings(events);
+        Map<Event, UserPublicDto> users = userService.findUsersEvents(events);
+
+        return EventMapper.toEventFullDtoList(events, users, requests, views, ratings);
     }
 }

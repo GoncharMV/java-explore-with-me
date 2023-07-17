@@ -66,4 +66,7 @@ public class Event {
     @Column(name = "state")
     private EventState state;
 
+    private Long views;
+    private Long rating;
+
 }

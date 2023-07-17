@@ -11,4 +11,5 @@ public class UserPublicDto {
 
     private Long id;
     private String name;
+    private Long rating;
 }

@@ -11,6 +11,7 @@ import ru.practicum.participation_request.dto.RequestUpdateStatusResultDto;
 import ru.practicum.participation_request.model.Request;
 import ru.practicum.participation_request.repository.RequestRepository;
 import ru.practicum.users.model.User;
+import ru.practicum.utils.CheckUtilService;
 import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.FindEntityUtilService;
 import ru.practicum.utils.enums.RequestStatus;
@@ -29,12 +30,13 @@ public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
     private final FindEntityUtilService findEntity;
+    private final CheckUtilService checkEntity;
 
     @Override
     public List<RequestDto> initiatorGetEventRequests(Long userId, Long eventId) {
         Event event = findEntity.findEventOrElseThrow(eventId);
         User user = findEntity.findUserOrElseThrow(userId);
-        findEntity.checkEventInitiator(event, user);
+        checkEntity.checkEventInitiator(event, user);
 
         List<Request> requests = requestRepository.findRequestByEvent(event);
 
@@ -49,7 +51,7 @@ public class RequestServiceImpl implements RequestService {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.findEventOrElseThrow(eventId);
 
-        findEntity.checkEventInitiator(event, user);
+        checkEntity.checkEventInitiator(event, user);
 
         Integer limit = event.getParticipantLimit();
 
@@ -103,8 +105,8 @@ public class RequestServiceImpl implements RequestService {
         User user = findEntity.findUserOrElseThrow(userId);
         Event event = findEntity.checkEventPublished(eventId);
 
-        findEntity.checkRequestInitiator(event, user);
-        findEntity.checkRepeatedRequest(event, user);
+        checkEntity.checkRequestInitiator(event, user);
+        checkEntity.checkRepeatedRequest(event, user);
 
         Request newRequest = Request.builder()
                 .requester(user)
@@ -116,7 +118,7 @@ public class RequestServiceImpl implements RequestService {
             newRequest.setStatus(RequestStatus.CONFIRMED);
         } else {
             if (!event.getRequestModeration()) {
-                findEntity.checkIfLimitIsFull(event);
+                checkEntity.checkIfLimitIsFull(event);
                 newRequest.setStatus(RequestStatus.CONFIRMED);
             } else {
                 newRequest.setStatus(RequestStatus.PENDING);
@@ -133,7 +135,7 @@ public class RequestServiceImpl implements RequestService {
     public RequestDto participantCancelRequest(Long userId, Long requestId) {
         User user = findEntity.findUserOrElseThrow(userId);
         Request request = findEntity.findRequestOrElseThrow(requestId);
-        findEntity.checkRequestRequestor(request, user);
+        checkEntity.checkRequestRequestor(request, user);
 
         if (!request.getStatus().equals(RequestStatus.CONFIRMED)) {
             request.setStatus(RequestStatus.CANCELED);

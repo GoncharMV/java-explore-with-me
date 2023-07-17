@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.categories.dto.CategoryDto;
 import ru.practicum.location.dto.LocationDto;
+import ru.practicum.rating.dto.EventRatingDto;
 import ru.practicum.users.dto.UserPublicDto;
 import ru.practicum.utils.ConstantUtil;
 import ru.practicum.utils.enums.EventState;
@@ -36,5 +37,6 @@ public class EventOutputFullDto {
     private EventState state;
     private String title;
     private Long views;
+    private EventRatingDto rating;
 
 }
