@@ -1,4 +1,10 @@
 # java-explore-with-me
-Ссылка на пул-реквест доп фичи диплома: https://github.com/TyushaMG/java-explore-with-me/pull/6
+<p> The event poster web application allows to create events and find the participants.</p>
+<p>The application has the statistic server which allows to make various selections to analyze 
+the operation of application; and the main server which contains everything you need to run the application.</p>
 
-Template repository for ExploreWithMe project.
+<p>The main server's api divided into three parts:</p>
+
+- Public — available without registration to any network user;
+- Private — available only to authorized users;
+- Administration — for service administrators.
